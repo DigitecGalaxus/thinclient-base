@@ -1,0 +1,5 @@
+[Desktop Entry]
+Name=conky
+Type=Application
+Exec=/usr/bin/conky
+Terminal=false

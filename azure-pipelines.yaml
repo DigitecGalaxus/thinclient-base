@@ -8,11 +8,11 @@ pool:
 
 variables:
 - name: usecache
-  value: false
+  value: "false"
 
 steps:
 - script: ./build.sh $(Build.SourceBranchName) $(Build.SourceVersion) $(usecache) 
-  workingDirectory: .
+  workingDirectory: ./build/
   name: buildThinClient
   displayName: 'Build Squashfs'
 - task: Docker@2
