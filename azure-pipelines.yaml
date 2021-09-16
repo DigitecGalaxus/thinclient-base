@@ -24,9 +24,9 @@ steps:
 - task: Docker@2
   inputs:
     containerRegistry: 'DG Modules Container Registry'
-    repository: 'planetexpress/thinclient-base:21.04'
+    repository: 'planetexpress/thinclient-base'
     command: 'push'
     Dockerfile: '.'
     buildContext: '.'
-    tags: 'latest'
+    tags: '21.04'
 
