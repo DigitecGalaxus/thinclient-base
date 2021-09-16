@@ -9,7 +9,6 @@ pool:
 variables:
 - name: usecache
   value: "true"
-- name: squashfsFilename
 - name: netbootIP
   value: 10.1.30.4
 - name: netbootUsername
