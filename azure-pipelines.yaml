@@ -11,6 +11,12 @@ variables:
   value: "true"
 
 steps:
+- task: Docker@2
+  inputs:
+    containerRegistry: 'DG Modules Container Registry'
+    command: 'login'
+    addPipelineData: false
+  displayName: 'Login to docker registry for build'
 - script: ./build.sh $(Build.SourceBranchName) $(Build.SourceVersion) $(usecache) 
   workingDirectory: ./build/
   name: buildThinClient
