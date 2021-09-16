@@ -1,0 +1,14 @@
+*.iso
+*.tar
+tarball
+*squashfs*
+*id_rsa*
+*.ppk
+*.log
+*.pem
+newest-*
+endpoints.yml*
+versions.json
+
+promote/menu.ipxe
+promote/parameters.json

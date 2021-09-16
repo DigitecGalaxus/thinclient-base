@@ -1,0 +1,22 @@
+trigger:
+  branches:
+    - "main"
+
+variables:
+- name: usecache
+  value: false
+
+steps:
+- script: ./build.sh $(Build.SourceBranchName) $(Build.SourceVersion) $(usecache) 
+  workingDirectory: ./build/
+  name: buildThinClient
+  displayName: 'Build Squashfs'
+- task: Docker@2
+  inputs:
+    containerRegistry: 'DG Modules Container Registry'
+    repository: 'planetexpress/thinclient-base:21.04"'
+    command: 'push'
+    Dockerfile: '.'
+    buildContext: '.'
+    tags: 'latest'
+

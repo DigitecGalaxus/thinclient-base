@@ -37,7 +37,7 @@ fi
 set -u
 
 # --no-cache is useful to apply the latest updates within an apt-get full-upgrade
-docker image build $dockerBuildCacheArgument -t "ubuntu-kde-base:21.04" .
+docker image build $dockerBuildCacheArgument -t "anymodconrst001dg.azurecr.io/planetexpress/thinclient-base:21.04" .
 
 tarFileName="newfilesystem.tar"
 removeFileIfExists "$tarFileName"
@@ -45,11 +45,12 @@ removeFileIfExists "$tarFileName"
 # Name of the resulting squashfs file, e.g. 21-01-17-master-6d358edc.squashfs
 squashfsFilename="$(date +%y-%m-%d)-$branchName-$gitCommitShortSha.squashfs"
 
-containerID=$(docker container create ubuntu-kde-base:21.04)
+echo "Starting to tar container filesystem - this will take a while..."
+containerID=$(docker container create ubuntu-kde-base:21.04 tail /dev/null)
 docker cp "$containerID:/" - > "$tarFileName"
 docker rm -f "$containerID"
 
-echo "Before copying new squashfs for $suffix"
+echo "Starting to convert tar file to squashfs file - this will take a while..."
 
 removeFileIfExists "$squashfsFilename"
 touch "$squashfsFilename"
@@ -62,4 +63,4 @@ docker rm -f "$squashfsContainerID"
 rm -f "$(pwd)/$tarFileName"
 
 # AzureDevOps specific way of passing an output variable to subsequent steps in the pipeline
-echo "##vso[task.setvariable variable=squashfsFilename$suffix;isOutput=true]$squashfsFilename"
+echo "##vso[task.setvariable variable=squashfsFilename;isOutput=true]$squashfsFilename"
