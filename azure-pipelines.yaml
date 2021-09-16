@@ -1,6 +1,7 @@
 trigger:
   branches:
-    - "main"
+    include:
+      - "main"
 
 pool:
   name: "planet-express-docker-agents"
