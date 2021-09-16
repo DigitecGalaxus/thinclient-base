@@ -8,7 +8,7 @@ pool:
 
 variables:
 - name: usecache
-  value: "false"
+  value: "true"
 
 steps:
 - script: ./build.sh $(Build.SourceBranchName) $(Build.SourceVersion) $(usecache) 
