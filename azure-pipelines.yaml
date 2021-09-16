@@ -2,6 +2,9 @@ trigger:
   branches:
     - "main"
 
+pool:
+  name: "planet-express-docker-agents"
+
 variables:
 - name: usecache
   value: false
