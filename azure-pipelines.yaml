@@ -12,7 +12,7 @@ variables:
 
 steps:
 - script: ./build.sh $(Build.SourceBranchName) $(Build.SourceVersion) $(usecache) 
-  workingDirectory: ./build/
+  workingDirectory: .
   name: buildThinClient
   displayName: 'Build Squashfs'
 - task: Docker@2
