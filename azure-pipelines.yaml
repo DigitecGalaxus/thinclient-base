@@ -9,6 +9,13 @@ pool:
 variables:
 - name: usecache
   value: "true"
+- name: squashfsFilename
+- name: netbootIP
+  value: 10.1.30.4
+- name: netbootUsername
+  value: master
+- name: folderToPromoteTo
+  value: dev
 
 steps:
 - task: Docker@2
@@ -29,4 +36,16 @@ steps:
     Dockerfile: '.'
     buildContext: '.'
     tags: '21.04'
+- task: DownloadSecureFile@1
+  inputs:
+    secureFile: 'netb-pronetb001.pem'
+  displayName: 'get private key to promote squasfs'
+- script: |
+    echo Installing netb-pronetb001.pem to the trusted CA directory...
+    sudo chown root:root $(Agent.TempDirectory)/netb-pronetb001.pem
+    sudo chmod a+r $(Agent.TempDirectory)/netb-pronetb001.pem
+  displayName: 'make private key secure'
+- script: ./promote.sh $(Agent.TempDirectory)/netb-pronetb001.pem $(squashfsFilename) $(netbootIP) $(netbootUsername) $(folderToPromoteTo)
+  workingDirectory: ./kernel-updates/promote/
+  displayName: 'Promote files on netboot server'
 
