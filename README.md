@@ -16,7 +16,7 @@ Conky displays informations about the current status of the thinclient. It gives
 
 ### Hostname
 
-We wanted to make sure, that every thingclient has a unique and recognizable hostname. Therefore during the boot (pre-network), we are executing the `hostname-changer.sh` script to adjust the hostname. The Hostname is set to `thinclient-{lastSixMACAddressCharacters}` .
+The thin client gets a unique and recognizable hostname from the `hostname-changer.sh` script. The Hostname is set to `thinclient-{lastSixMACAddressCharacters}`.
 
 ### Network
 
