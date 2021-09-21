@@ -62,5 +62,6 @@ docker wait "$squashfsContainerID"
 docker rm -f "$squashfsContainerID"
 rm -f "$(pwd)/$tarFileName"
 
+squashfsAbsolutePath="$(pwd)/$squashfsFilename"
 # AzureDevOps specific way of passing an output variable to subsequent steps in the pipeline
-echo "##vso[task.setvariable variable=squashfsFilename;isOutput=true]$squashfsFilename"
+echo "##vso[task.setvariable variable=squashfsAbsolutePath;isOutput=true]$squashfsAbsolutePath"
