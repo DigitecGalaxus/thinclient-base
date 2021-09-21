@@ -24,7 +24,7 @@ The changes in the networks are small and only for aesthetics. When not applying
 
 ### Restart
 
-We have implemented a trigger for an automatic restart for the thinclient. This should ensure, that we have a clean boot after a while and free up the clogged system after a while. Our default is set to two weeks, but this can be adjusted or removed according to your liking. 
+We have implemented a trigger for an automatic restart for the thin client. This should ensure, that we have a clean boot after a while and start freshly with an up-to-date system. The default such that the system reboots after two weeks during the night.
 
 Note: In the terminal you will see periodically, when the system is going to reboot. If you want to check it while on desktop, Conky displays this information too.
 
