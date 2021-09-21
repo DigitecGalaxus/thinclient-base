@@ -30,6 +30,8 @@ Note: In the terminal you will see periodically, when the system is going to reb
 
 ### Scrolling
 
+This is an experimental feature. We got some notifications, that scrolling with the scroll wheel was not working. This scripts checks all pointer devices and enables scrolling with the wheel.
+
 ## Contribute
 
 No matter how small, we value every contribution! If you wish to contribute,
