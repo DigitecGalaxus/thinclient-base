@@ -44,7 +44,7 @@ steps:
     sudo chown root:root $(Agent.TempDirectory)/netb-pronetb001.pem
     sudo chmod a+r $(Agent.TempDirectory)/netb-pronetb001.pem
   displayName: 'make private key secure'
-- script: ./promote.sh $(Agent.TempDirectory)/netb-pronetb001.pem $(squashfsFilename) $(netbootIP) $(netbootUsername) $(folderToPromoteTo)
+- script: ./promote.sh $(Agent.TempDirectory)/netb-pronetb001.pem $(buildThinClient.squashfsAbsolutePath) $(netbootIP) $(netbootUsername) $(folderToPromoteTo)
   workingDirectory: ./promote/
   displayName: 'Promote files on netboot server'
 
