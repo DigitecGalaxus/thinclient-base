@@ -12,7 +12,7 @@ The PAM common-session config is adjusted to execute a script, which logs out ol
 
 ### Conky
 
-Conky displays informations about the current status of the thinclient. It gives a brief overview over the configured networks, system workloads, hostnames and more.
+Conky displays informations about the current status of the thin client. It gives a brief overview over the configured networks, system workloads, hostnames and more on the desktop.
 
 ### Hostname
 
