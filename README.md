@@ -4,7 +4,7 @@ This repository contains files and scripts to build a customized version of the 
 
 ## Customizations
 
-To make the image a bit more suitable for a stateless operation, we have made some customisations which should make the experience better.
+To make the image a bit more suitable for a stateless operation, there are some customisations which should make the experience better.
 
 ### Authentication
 
@@ -24,13 +24,13 @@ The changes in the networks are small and only for aesthetics. When not applying
 
 ### Restart
 
-We have implemented a trigger for an automatic restart for the thin client. This should ensure, that we have a clean boot after a while and start freshly with an up-to-date system. The default such that the system reboots after two weeks during the night.
+A trigger is implemented for an automatic restart for the thin client. This should ensure, that a clean boot is done after a while and start freshly with an up-to-date system. The default such that the system reboots after two weeks during the night.
 
 Note: In the terminal you will see periodically, when the system is going to reboot. If you want to check it while on desktop, Conky displays this information too.
 
 ### Scrolling
 
-This is an experimental feature. We got some notifications, that scrolling with the scroll wheel was not working. This scripts checks all pointer devices and enables scrolling with the wheel.
+This is an experimental feature. The scrolling with the scroll wheel is not working on all devices. This scripts checks all pointer devices and enables scrolling with the wheel.
 
 ## Contribute
 
