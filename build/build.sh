@@ -36,9 +36,11 @@ fi
 # Setting this intentionally after the argument parsing for the shell script
 set -u
 
+imageName="anymodconrst001dg.azurecr.io/planetexpress/thinclient-base:21.04"
+
 # --no-cache is useful to apply the latest updates within an apt-get full-upgrade
 #docker image build --pull $dockerBuildCacheArgument -t "anymodconrst001dg.azurecr.io/planetexpress/thinclient-base:21.04" .
-docker image build -t "anymodconrst001dg.azurecr.io/planetexpress/thinclient-base:21.04" .
+docker image build -t "$imageName" .
 
 
 tarFileName="newfilesystem.tar"
@@ -48,7 +50,7 @@ removeFileIfExists "$tarFileName"
 squashfsFilename="$(date +%y-%m-%d)-$branchName-$gitCommitShortSha.squashfs"
 
 echo "Starting to tar container filesystem - this will take a while..."
-containerID=$(docker container create anymodconrst001dg.azurecr.io/planetexpress/thinclient-base:21:04 tail /dev/null)
+containerID=$(docker container create "$imageName" tail /dev/null)
 docker cp "$containerID:/" - > "$tarFileName"
 docker rm -f "$containerID"
 
