@@ -33,7 +33,7 @@ RUN apt-get install -y apt-utils debconf-utils dialog
 RUN echo "resolvconf resolvconf/linkify-resolvconf boolean false" | debconf-set-selections && apt-get install -y resolvconf
 ## RUN ln -sf /run/systemd/resolve/resolv.conf /etc/resolv.conf
 RUN dpkg-reconfigure resolvconf
-RUN apt-get install -y network-manager-kde
+RUN apt-get install -y plasma-nm
 
 COPY ./authentication/common-session /etc/pam.d/common-session
 COPY ./authentication/logout-old-user.sh /usr/local/share/scripts/logout-old-user.sh
