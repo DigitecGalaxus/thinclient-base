@@ -30,12 +30,11 @@ RUN useradd ubuntu -s /bin/bash -d /home/ubuntu -m -G sudo && echo ubuntu:ubuntu
 # DNS Issues Resolve
 RUN apt-get update    
 RUN apt-get install -y apt-utils debconf-utils dialog
-RUN echo 'debconf debconf/frontend select Noninteractive' | debconf-set-selections
 RUN echo "resolvconf resolvconf/linkify-resolvconf boolean false" | debconf-set-selections
-RUN apt-get update
 RUN apt-get install -y resolvconf
 RUN ln -sf /run/systemd/resolve/resolv.conf /etc/resolv.conf
 RUN dpkg-reconfigure resolvconf
+RUN apt-get install -y network-manager-kde
 
 COPY ./authentication/common-session /etc/pam.d/common-session
 COPY ./authentication/logout-old-user.sh /usr/local/share/scripts/logout-old-user.sh
@@ -61,9 +60,6 @@ COPY ./hostname/hostname-changer.service /etc/systemd/system/hostname-changer.se
 RUN mkdir -p /etc/systemd/system/network.target.wants/
 RUN ln -s /etc/systemd/system/hostname-changer.service /etc/systemd/system/network.target.wants/hostname-changer.service
 
-# Set sddm as display manager and install Plasma as desktop environment
-RUN /bin/bash -c "debconf-set-selections <<< 'sddm shared/default-x-display-manager select sddm'" && apt-get -qq update && apt-get -qq install -y kde-plasma-desktop plasma-nm dolphin print-manager libglib2.0-dev locales kde-spectacle > /dev/null 2>&1
-
 # Uninstall packages we don't need
 # RUN apt-get -qq --purge remove -y kdeconnect partitionmanager xiterm+thai kaddressbook khelpcenter kmail kopete kwalletmanager korganizer okular sweeper dragonplayer juk pim-sieve-editor kwalletmanager gwenview imagemagick akregator konqueror plasma-discover gnome-shell gdm3 gnupg2 apt-utils cracklib-runtime > /dev/null 2>&1
 
@@ -82,3 +78,7 @@ RUN mkdir -p /etc/NetworkManager/conf.d/ && touch /etc/NetworkManager/conf.d/10-
 # This cleanup works, as we'll be copying the complete filesystem later, therefore omitting any files that would still exist in an underlying layer.
 # delete obsolete packages and any temporary state
 # RUN apt-get -qq autoremove -y > /dev/null 2>&1 && apt-get -qq clean > /dev/null 2>&1
+
+
+# Set sddm as display manager and install Plasma as desktop environment
+RUN /bin/bash -c "debconf-set-selections <<< 'sddm shared/default-x-display-manager select sddm'" && apt-get -qq update && apt-get -qq install -y kde-plasma-desktop plasma-nm dolphin print-manager libglib2.0-dev locales kde-spectacle > /dev/null 2>&1
