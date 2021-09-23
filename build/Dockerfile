@@ -20,8 +20,9 @@ RUN sh -c 'echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable 
 RUN bash -c 'kernelVersion=$(curl -s http://netboot.intranet.digitec/kernels/latest-kernel-version.json | jq -r .version); if [[ "$kernelVersion" == "" ]]; then kernelVersion="5.11.0-16-generic"; fi && \
 apt-get -qq update && apt-get -qq install -y sudo vim syslog-ng zram-config earlyoom iputils-ping dnsutils traceroute ca-certificates google-chrome-stable firefox conky openssh-server libxss1 linux-modules-extra-$kernelVersion > /dev/null 2>&1'
 
-# Install
-RUN apt-get -qq update && apt-get -qq install -y resolvconf > /dev/null 2>&1
+# Install Resolvconf // https://github.com/moby/moby/issues/1297
+RUN echo "resolvconf resolvconf/linkify-resolvconf boolean false" | debconf-set-selections
+RUN bash -c 'apt-get -qq install -y resolvconf'
 
 # Disable pop up on first opening of chrome
 RUN sed -i 's,Exec=/usr/bin/google-chrome-stable,Exec=/usr/bin/google-chrome-stable --no-first-run --no-default-browser-check,g' /usr/share/applications/google-chrome.desktop
