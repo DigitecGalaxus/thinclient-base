@@ -30,9 +30,8 @@ RUN useradd ubuntu -s /bin/bash -d /home/ubuntu -m -G sudo && echo ubuntu:ubuntu
 # DNS Issues Resolve
 RUN apt-get update    
 RUN apt-get install -y apt-utils debconf-utils dialog
-RUN echo "resolvconf resolvconf/linkify-resolvconf boolean false" | debconf-set-selections
-RUN apt-get install -y resolvconf
-RUN ln -sf /run/systemd/resolve/resolv.conf /etc/resolv.conf
+RUN echo "resolvconf resolvconf/linkify-resolvconf boolean false" | debconf-set-selections && apt-get install -y resolvconf
+## RUN ln -sf /run/systemd/resolve/resolv.conf /etc/resolv.conf
 RUN dpkg-reconfigure resolvconf
 RUN apt-get install -y network-manager-kde
 
