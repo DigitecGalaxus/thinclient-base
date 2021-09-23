@@ -18,14 +18,7 @@ RUN sh -c 'echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable 
 # Install packages that we need
 # TODO add Fallback for curl to netboot
 RUN bash -c 'kernelVersion=$(curl -s http://netboot.intranet.digitec/kernels/latest-kernel-version.json | jq -r .version); if [[ "$kernelVersion" == "" ]]; then kernelVersion="5.11.0-16-generic"; fi && \
-apt-get -qq update && apt-get -qq install -y sudo vim syslog-ng zram-config earlyoom iputils-ping dnsutils traceroute ca-certificates google-chrome-stable firefox conky openssh-server libxss1 linux-modules-extra-$kernelVersion > /dev/null 2>&1'
-
-# Install Resolvconf // https://github.com/moby/moby/issues/1297
-RUN apt-get install -y apt-utils debconf-utils dialog
-RUN echo 'debconf debconf/frontend select Noninteractive' | debconf-set-selections
-RUN echo "resolvconf resolvconf/linkify-resolvconf boolean false" | debconf-set-selections
-RUN apt-get -qq update
-RUN apt-get -qq install -y resolvconf
+apt-get -qq update && apt-get -qq install -y sudo vim syslog-ng zram-config earlyoom netplan.io iputils-ping dnsutils traceroute ca-certificates google-chrome-stable firefox conky openssh-server libxss1 linux-modules-extra-$kernelVersion > /dev/null 2>&1'
 
 # Disable pop up on first opening of chrome
 RUN sed -i 's,Exec=/usr/bin/google-chrome-stable,Exec=/usr/bin/google-chrome-stable --no-first-run --no-default-browser-check,g' /usr/share/applications/google-chrome.desktop
@@ -71,22 +64,10 @@ ARG OS_RELEASE
 RUN echo "export dg_os_release=$OS_RELEASE" >> /etc/profile
 
 # Initialise Network Manager
-# COPY ./network/NetworkManager.conf /etc/NetworkManager/NetworkManager.conf
+ COPY ./network/NetworkManager.conf /etc/NetworkManager/NetworkManager.conf
 # This seems to be necessary for the network manager to recognize the default connection properly
-# RUN mkdir -p /etc/NetworkManager/conf.d/ && touch /etc/NetworkManager/conf.d/10-globally-managed-devices.conf
+ RUN mkdir -p /etc/NetworkManager/conf.d/ && touch /etc/NetworkManager/conf.d/10-globally-managed-devices.conf
 
 # This cleanup works, as we'll be copying the complete filesystem later, therefore omitting any files that would still exist in an underlying layer.
 # delete obsolete packages and any temporary state
 # RUN apt-get -qq autoremove -y > /dev/null 2>&1 && apt-get -qq clean > /dev/null 2>&1
-RUN rm -rf \
-    /tmp/* \
-    /boot/* \
-    /var/backups/* \
-    /var/log/* \
-    /var/run/* \
-    /var/crash/* \
-    /var/lib/apt/lists/* \
-    /usr/share/keyrings/* \
-    ~/.bash_history
-
-RUN mkdir -p /var/log/sssd
