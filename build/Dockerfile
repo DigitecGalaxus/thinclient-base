@@ -18,7 +18,7 @@ RUN sh -c 'echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable 
 # Install packages that we need
 # TODO add Fallback for curl to netboot
 RUN bash -c 'kernelVersion=$(curl -s http://netboot.intranet.digitec/kernels/latest-kernel-version.json | jq -r .version); if [[ "$kernelVersion" == "" ]]; then kernelVersion="5.11.0-16-generic"; fi && \
-apt-get -qq update && apt-get -qq install -y sudo vim syslog-ng zram-config earlyoom netplan.io iputils-ping dnsutils traceroute ca-certificates google-chrome-stable firefox conky openssh-server libxss1 linux-modules-extra-$kernelVersion > /dev/null 2>&1'
+apt-get -qq update && apt-get -qq install -y sudo vim syslog-ng zram-config earlyoom iputils-ping dnsutils traceroute ca-certificates google-chrome-stable firefox conky openssh-server libxss1 linux-modules-extra-$kernelVersion > /dev/null 2>&1'
 
 # Disable pop up on first opening of chrome
 RUN sed -i 's,Exec=/usr/bin/google-chrome-stable,Exec=/usr/bin/google-chrome-stable --no-first-run --no-default-browser-check,g' /usr/share/applications/google-chrome.desktop
