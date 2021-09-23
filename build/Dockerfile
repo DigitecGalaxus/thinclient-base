@@ -21,8 +21,11 @@ RUN bash -c 'kernelVersion=$(curl -s http://netboot.intranet.digitec/kernels/lat
 apt-get -qq update && apt-get -qq install -y sudo vim syslog-ng zram-config earlyoom iputils-ping dnsutils traceroute ca-certificates google-chrome-stable firefox conky openssh-server libxss1 linux-modules-extra-$kernelVersion > /dev/null 2>&1'
 
 # Install Resolvconf // https://github.com/moby/moby/issues/1297
+RUN apt-get install -y apt-utils debconf-utils dialog
+RUN echo 'debconf debconf/frontend select Noninteractive' | debconf-set-selections
 RUN echo "resolvconf resolvconf/linkify-resolvconf boolean false" | debconf-set-selections
-RUN bash -c 'apt-get -qq install -y resolvconf'
+RUN apt-get -qq update
+RUN apt-get -qq install -y resolvconf
 
 # Disable pop up on first opening of chrome
 RUN sed -i 's,Exec=/usr/bin/google-chrome-stable,Exec=/usr/bin/google-chrome-stable --no-first-run --no-default-browser-check,g' /usr/share/applications/google-chrome.desktop
@@ -38,7 +41,7 @@ COPY ./conky/conky.conf /etc/conky/conky.conf
 COPY ./conky/conky.desktop /etc/xdg/autostart/conky.desktop
 
 # Remove apparmor, as it interferes with sssd
-RUN apt-get -qq --purge remove apparmor > /dev/null 2>&1
+# RUN apt-get -qq --purge remove apparmor > /dev/null 2>&1
 
 # Add automatic Shutdown Trigger after a specified time defined in the restart.service file.
 COPY ./restart/restart.service /etc/systemd/system/restart.service
@@ -58,7 +61,7 @@ RUN ln -s /etc/systemd/system/hostname-changer.service /etc/systemd/system/netwo
 RUN /bin/bash -c "debconf-set-selections <<< 'sddm shared/default-x-display-manager select sddm'" && apt-get -qq update && apt-get -qq install -y kde-plasma-desktop plasma-nm dolphin print-manager libglib2.0-dev locales kde-spectacle > /dev/null 2>&1
 
 # Uninstall packages we don't need
-RUN apt-get -qq --purge remove -y kdeconnect partitionmanager xiterm+thai kaddressbook khelpcenter kmail kopete kwalletmanager korganizer okular sweeper dragonplayer juk pim-sieve-editor kwalletmanager gwenview imagemagick akregator konqueror plasma-discover gnome-shell gdm3 gnupg2 apt-utils cracklib-runtime > /dev/null 2>&1
+# RUN apt-get -qq --purge remove -y kdeconnect partitionmanager xiterm+thai kaddressbook khelpcenter kmail kopete kwalletmanager korganizer okular sweeper dragonplayer juk pim-sieve-editor kwalletmanager gwenview imagemagick akregator konqueror plasma-discover gnome-shell gdm3 gnupg2 apt-utils cracklib-runtime > /dev/null 2>&1
 
 # Prevent wallet / Key manager popups
 RUN rm -f /usr/share/dbus-1/services/org.kde.kwalletd5.service
@@ -68,13 +71,13 @@ ARG OS_RELEASE
 RUN echo "export dg_os_release=$OS_RELEASE" >> /etc/profile
 
 # Initialise Network Manager
-COPY ./network/NetworkManager.conf /etc/NetworkManager/NetworkManager.conf
+# COPY ./network/NetworkManager.conf /etc/NetworkManager/NetworkManager.conf
 # This seems to be necessary for the network manager to recognize the default connection properly
-RUN mkdir -p /etc/NetworkManager/conf.d/ && touch /etc/NetworkManager/conf.d/10-globally-managed-devices.conf
+# RUN mkdir -p /etc/NetworkManager/conf.d/ && touch /etc/NetworkManager/conf.d/10-globally-managed-devices.conf
 
 # This cleanup works, as we'll be copying the complete filesystem later, therefore omitting any files that would still exist in an underlying layer.
 # delete obsolete packages and any temporary state
-#RUN apt-get -qq autoremove -y > /dev/null 2>&1 && apt-get -qq clean > /dev/null 2>&1
+# RUN apt-get -qq autoremove -y > /dev/null 2>&1 && apt-get -qq clean > /dev/null 2>&1
 RUN rm -rf \
     /tmp/* \
     /boot/* \
