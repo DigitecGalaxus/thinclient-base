@@ -11,6 +11,7 @@ RUN yes | unminimize > /dev/null 2>&1
 RUN apt-get -qq -y full-upgrade > /dev/null 2>&1
 RUN apt-get -qq update && apt-get -qq install -y curl jq software-properties-common gnupg2 apt-utils wget > /dev/null 2>&1
 
+
 # Add repository for Google Chrome
 RUN wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add -
 RUN sh -c 'echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google-chrome.list'
@@ -25,6 +26,16 @@ RUN sed -i 's,Exec=/usr/bin/google-chrome-stable,Exec=/usr/bin/google-chrome-sta
 
 # Setup default login
 RUN useradd ubuntu -s /bin/bash -d /home/ubuntu -m -G sudo && echo ubuntu:ubuntu | chpasswd
+
+# DNS Issues Resolve
+RUN apt-get update    
+RUN apt-get install -y apt-utils debconf-utils dialog
+RUN echo 'debconf debconf/frontend select Noninteractive' | debconf-set-selections
+RUN echo "resolvconf resolvconf/linkify-resolvconf boolean false" | debconf-set-selections
+RUN apt-get update
+RUN apt-get install -y resolvconf
+RUN ln -sf /run/systemd/resolve/resolv.conf /etc/resolv.conf
+RUN dpkg-reconfigure resolvconf
 
 COPY ./authentication/common-session /etc/pam.d/common-session
 COPY ./authentication/logout-old-user.sh /usr/local/share/scripts/logout-old-user.sh
