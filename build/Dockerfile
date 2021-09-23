@@ -31,7 +31,7 @@ COPY ./authentication/logout-old-user.sh /usr/local/share/scripts/logout-old-use
 
 # Install DNS Resolver recreator script
 RUN echo "resolvconf resolvconf/linkify-resolvconf boolean false" | debconf-set-selections && apt-get install -y resolvconf
-COPY ./netowrk/recreate-resolver.service /etc/systemd/system/recreate-resolver.service 
+COPY ./network/recreate-resolver.service /etc/systemd/system/recreate-resolver.service 
 RUN ln -s /etc/systemd/system/recreate-resolver.service /etc/systemd/system/multi-user.target.wants/recreate-resolver.service 
 
 # Conky - program to display stats on desktop
