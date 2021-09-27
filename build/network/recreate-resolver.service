@@ -1,9 +1,0 @@
-[Unit]
-Description=Recreate Resolver File before login
-
-[Service]
-Type=Simple
-ExecStart=/bin/bash 'dpkg-reconfigure resolvconf -f noninteractive'
-
-[Install]
-WantedBy=multi-user.target

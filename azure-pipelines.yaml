@@ -23,7 +23,7 @@ steps:
     command: 'login'
     addPipelineData: false
   displayName: 'Login to docker registry for build'
-- script: ./build.sh $(Build.SourceBranchName) $(Build.SourceVersion) $(usecache) 
+- script: ./build.sh $(netbootIP) $(Build.SourceBranchName) $(Build.SourceVersion) $(usecache)
   workingDirectory: ./build/
   name: buildThinClient
   displayName: 'Build Squashfs'
