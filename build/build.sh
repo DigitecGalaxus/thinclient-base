@@ -51,7 +51,7 @@ squashfsFilename="$(date +%y-%m-%d)-$branchName-$gitCommitShortSha.squashfs"
 
 echo "Starting to tar container filesystem - this will take a while..."
 #containerID=$(docker container create "$imageName" tail /dev/null)
-ContainerID=$(docker run -d "$imageName" tail -f /dev/null)
+containerID=$(docker run -d "$imageName" tail -f /dev/null)
 docker cp "$containerID:/" - > "$tarFileName"
 docker rm -f "$containerID"
 
