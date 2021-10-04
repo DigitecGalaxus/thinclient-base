@@ -23,5 +23,5 @@ kernelVersion=$(curl "http://$netbootIP/kernels/latest-kernel-version.json" | jq
 kernelVersionFile="${squashfsFileName%.*}-kernel.json"
 echo '{ "version": "'"$kernelVersion"'" }' > "$kernelVersionFile"
 
-scp -i "$pemFilePath" -o StrictHostKeyChecking=no "$squashfsAbsolutePath" "$netbootUsername@$netbootIP:/home/master/netboot/assets/$folderToPromoteTo/$squashfsFileName"
-scp -i "$pemFilePath" -o StrictHostKeyChecking=no "$kernelVersionFile" "$netbootUsername@$netbootIP:/home/master/netboot/assets/$folderToPromoteTo/$kernelVersionFile" 
+scp -i "$pemFilePath" -o StrictHostKeyChecking=no "$squashfsAbsolutePath" "$netbootUsername@$netbootIP:/home/$netbootUsername/netboot/assets/$folderToPromoteTo/$squashfsFileName"
+scp -i "$pemFilePath" -o StrictHostKeyChecking=no "$kernelVersionFile" "$netbootUsername@$netbootIP:/home/$netbootUsername/netboot/assets/$folderToPromoteTo/$kernelVersionFile" 
