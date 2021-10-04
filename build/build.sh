@@ -37,7 +37,7 @@ fi
 set -u
 
 # --no-cache is useful to apply the latest updates within an apt-get full-upgrade
-docker image build --pull $dockerBuildCacheArgument -t "anymodconrst001dg.azurecr.io/planetexpress/thinclient-base:21.04" .
+docker image build $dockerBuildCacheArgument -t "anymodconrst001dg.azurecr.io/planetexpress/thinclient-base:21.04" .
 
 tarFileName="newfilesystem.tar"
 removeFileIfExists "$tarFileName"
