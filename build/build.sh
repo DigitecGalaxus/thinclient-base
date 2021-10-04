@@ -16,7 +16,7 @@ if [[ $# -lt 1 ]]; then
         echo "Error: No arguments passed. Make sure to pass at least the Netboot IP Address"
 else
         if [[ $# -lt 4 ]]; then
-                echo "Warning: Passed less than 4 arguments. Ignoring all passed arguments and determining defaults"
+                echo "Warning: Passed less than 4 arguments. Ignoring the last three passed arguments and determining defaults"
                 netbootIP="$1"
                 branchName=$(git symbolic-ref -q --short HEAD)
                 branchName=${branchName:-HEAD}
@@ -35,7 +35,7 @@ fi
 if [[ "$useDockerBuildCache" == "true" || "$useDockerBuildCache" == "True" ]]; then
         dockerBuildCacheArgument=""
 else
-        dockerBuildCacheArgument="--no-cache"
+        dockerBuildCacheArgument="--no-cache --pull"
 fi
 
 # Setting this intentionally after the argument parsing for the shell script
@@ -47,14 +47,13 @@ imageName="anymodconrst001dg.azurecr.io/planetexpress/thinclient-base:21.04"
 squashfsFilename="$(date +%y-%m-%d)-$branchName-$gitCommitShortSha.squashfs"
 
 # --no-cache is useful to apply the latest updates within an apt-get full-upgrade
-#docker image build --pull $dockerBuildCacheArgument -t "anymodconrst001dg.azurecr.io/planetexpress/thinclient-base:21.04" .
-docker image build --build-arg OS_RELEASE=${squashfsFilename%.*} --build-arg NETBOOT_IP=$netbootIP --pull $dockerBuildCacheArgument -t "$imageName" .
+docker image build --build-arg OS_RELEASE=${squashfsFilename%.*} --build-arg NETBOOT_IP=$netbootIP $dockerBuildCacheArgument -t "$imageName" .
 
 tarFileName="newfilesystem.tar"
 removeFileIfExists "$tarFileName"
 
 echo "Starting to tar container filesystem - this will take a while..."
-#containerID=$(docker container create "$imageName" tail /dev/null)
+# This needs to be a docker container run to also copy container runtime info such as /etc/resolv.conf
 containerID=$(docker run -d "$imageName" tail -f /dev/null)
 docker cp "$containerID:/" - >"$tarFileName"
 docker rm -f "$containerID"
