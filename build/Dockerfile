@@ -1,5 +1,4 @@
 # This Dockerfile does not follow some best-practices, as it's not intended to be used as a Docker image. We simply use Docker as an abstraction for creating the filesystem we need.
-# TODO move this image to a publicly accessible registry and opensource it's code
 FROM anymodconrst001dg.azurecr.io/planetexpress/ubuntu-base:21.04
 
 # Set environment variables so apt installs packages non-interactively
@@ -16,8 +15,8 @@ RUN wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key
 RUN sh -c 'echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google-chrome.list'
 
 # Install packages that we need
-# TODO add Fallback for curl to netboot
-RUN bash -c 'kernelVersion=$(curl -s http://netboot.intranet.digitec/kernels/latest-kernel-version.json | jq -r .version); if [[ "$kernelVersion" == "" ]]; then kernelVersion="5.11.0-16-generic"; fi && \
+ARG NETBOOT_IP
+RUN bash -c 'kernelVersion=$(curl -s http://$NETBOOT_IP/kernels/latest-kernel-version.json | jq -r .version); if [[ "$kernelVersion" == "" ]]; then kernelVersion="5.11.0-16-generic"; fi && \
 apt-get -qq update && apt-get -qq install -y sudo vim syslog-ng zram-config earlyoom iputils-ping dnsutils traceroute ca-certificates google-chrome-stable firefox conky openssh-server libxss1 linux-modules-extra-$kernelVersion > /dev/null 2>&1'
 
 # Disable pop up on first opening of chrome
