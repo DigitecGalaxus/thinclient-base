@@ -55,11 +55,11 @@ if $kernelIsNew
 then
         echo '{ "version": "'"$kernelVersion"'" }' > latest-kernel-version.json
         # Upload kernel into the kernel folder on the netboot server
-        kernelFolder="/home/master/netboot/assets/kernels/$kernelVersion"
+        kernelFolder="/home/$netbootUsername/netboot/assets/kernels/$kernelVersion"
         ssh -i "$pemFilePath" -o "StrictHostKeyChecking=no" "$netbootUsername@$netbootIP" mkdir -p "$kernelFolder"
         scp -i "$pemFilePath" -o "StrictHostKeyChecking=no" "latest-kernel" "$netbootUsername@$netbootIP:$kernelFolder/vmlinuz"
         # Update the latest-kernel-version.json in the kernels folder on the netboot server
-        scp -i "$pemFilePath" -o "StrictHostKeyChecking=no" "latest-kernel-version.json" "$netbootUsername@$netbootIP:/home/master/netboot/assets/kernels/latest-kernel-version.json"
+        scp -i "$pemFilePath" -o "StrictHostKeyChecking=no" "latest-kernel-version.json" "$netbootUsername@$netbootIP:/home/$netbootUsername/netboot/assets/kernels/latest-kernel-version.json"
         # Update initrd
         curl -L -o latest-initrd "https://github.com/netbootxyz${yamlendpoints_ubuntu_21_04_default_squash_path}initrd"
         scp -i "$pemFilePath" -o "StrictHostKeyChecking=no" "latest-initrd" "$netbootUsername@$netbootIP:$kernelFolder/initrd"
