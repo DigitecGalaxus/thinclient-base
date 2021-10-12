@@ -25,15 +25,14 @@ RUN sed -i 's,Exec=/usr/bin/google-chrome-stable,Exec=/usr/bin/google-chrome-sta
 # Setup default login
 RUN useradd ubuntu -s /bin/bash -d /home/ubuntu -m -G sudo && echo ubuntu:ubuntu | chpasswd
 
-COPY ./authentication/common-session /etc/pam.d/common-session
+# Configure Userdir Creation + Initialise logout-old-uesr script.
+RUN echo "session optional pam_mkhomedir.so umask=0077" >> /etc/pam.d/common-session
+RUN echo "session optional pam_exec.so log=/var/log/pam-logout.log /usr/local/share/scripts/logout-old-user.sh" >> /etc/pam.d/common-session
 COPY ./authentication/logout-old-user.sh /usr/local/share/scripts/logout-old-user.sh
 
 # Conky - program to display stats on desktop
 COPY ./conky/conky.conf /etc/conky/conky.conf
 COPY ./conky/conky.desktop /etc/xdg/autostart/conky.desktop
-
-# Remove apparmor, as it interferes with sssd
-RUN apt-get -qq --purge remove apparmor > /dev/null 2>&1
 
 # Add automatic Shutdown Trigger after a specified time defined in the restart.service file.
 COPY ./restart/restart.service /etc/systemd/system/restart.service
@@ -80,5 +79,3 @@ RUN rm -rf \
     /var/lib/apt/lists/* \
     /usr/share/keyrings/* \
     ~/.bash_history
-
-RUN mkdir -p /var/log/sssd
