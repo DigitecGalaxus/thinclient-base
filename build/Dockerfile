@@ -25,7 +25,7 @@ RUN sed -i 's,Exec=/usr/bin/google-chrome-stable,Exec=/usr/bin/google-chrome-sta
 # Setup default login
 RUN useradd ubuntu -s /bin/bash -d /home/ubuntu -m -G sudo && echo ubuntu:ubuntu | chpasswd
 
-COPY ./authentication/common-session /etc/pam.d/common-session
+#COPY ./authentication/common-session /etc/pam.d/common-session
 COPY ./authentication/logout-old-user.sh /usr/local/share/scripts/logout-old-user.sh
 
 # Conky - program to display stats on desktop
