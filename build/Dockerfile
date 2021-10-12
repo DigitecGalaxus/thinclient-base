@@ -25,15 +25,14 @@ RUN sed -i 's,Exec=/usr/bin/google-chrome-stable,Exec=/usr/bin/google-chrome-sta
 # Setup default login
 RUN useradd ubuntu -s /bin/bash -d /home/ubuntu -m -G sudo && echo ubuntu:ubuntu | chpasswd
 
+RUN echo "session optional pam_mkhomedir.so umask=0077" >> /etc/pam.d/common-session
+RUN echo "session optional pam_exec.so log=/var/log/pam-logout.log /usr/local/share/scripts/logout-old-user.sh" >> /etc/pam.d/common-session
 #COPY ./authentication/common-session /etc/pam.d/common-session
 COPY ./authentication/logout-old-user.sh /usr/local/share/scripts/logout-old-user.sh
 
 # Conky - program to display stats on desktop
 COPY ./conky/conky.conf /etc/conky/conky.conf
 COPY ./conky/conky.desktop /etc/xdg/autostart/conky.desktop
-
-# Remove apparmor, as it interferes with sssd
-# RUN apt-get -qq --purge remove apparmor > /dev/null 2>&1
 
 # Add automatic Shutdown Trigger after a specified time defined in the restart.service file.
 COPY ./restart/restart.service /etc/systemd/system/restart.service
@@ -53,7 +52,7 @@ RUN ln -s /etc/systemd/system/hostname-changer.service /etc/systemd/system/netwo
 RUN /bin/bash -c "debconf-set-selections <<< 'sddm shared/default-x-display-manager select sddm'" && apt-get -qq update && apt-get -qq install -y kde-plasma-desktop plasma-nm dolphin print-manager libglib2.0-dev locales kde-spectacle > /dev/null 2>&1
 
 # Uninstall packages we don't need
-#RUN apt-get -qq --purge remove -y kdeconnect partitionmanager xiterm+thai kaddressbook khelpcenter kmail kopete kwalletmanager korganizer okular sweeper dragonplayer juk pim-sieve-editor kwalletmanager gwenview imagemagick akregator konqueror plasma-discover gnome-shell gdm3 gnupg2 apt-utils cracklib-runtime > /dev/null 2>&1
+RUN apt-get -qq --purge remove -y kdeconnect partitionmanager xiterm+thai kaddressbook khelpcenter kmail kopete kwalletmanager korganizer okular sweeper dragonplayer juk pim-sieve-editor kwalletmanager gwenview imagemagick akregator konqueror plasma-discover gnome-shell gdm3 gnupg2 apt-utils cracklib-runtime > /dev/null 2>&1
 
 # Prevent wallet / Key manager popups
 RUN rm -f /usr/share/dbus-1/services/org.kde.kwalletd5.service
