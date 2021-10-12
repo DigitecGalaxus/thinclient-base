@@ -8,7 +8,7 @@ To make the image a bit more suitable for a stateless operation, there are some 
 
 ### Authentication
 
-The PAM common-session config is adjusted to execute a script, which logs out old users. This ensures that not too many users are logged in and eat up the available Memory. This will be useful, when more than one user is logged in to the thin client.
+The PAM common-session is adjusted to execute a script, which logs out old users. This ensures that not too many users are logged in and eat up the available Memory. This will be useful, when more than one user is logged in to the thin client.
 
 ### Conky
 
