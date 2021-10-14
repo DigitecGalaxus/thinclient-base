@@ -8,7 +8,7 @@ pool:
 
 variables:
 - name: usecache
-  value: "true"
+  value: false
 - name: netbootIP
   value: 10.1.30.4
 - name: netbootUsername
