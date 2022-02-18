@@ -7,6 +7,6 @@ WantedBy=multi-user.target
 [Service]
 # It works by converting the scheduled time, and now to seconds since the UNIX epoch, calculating the difference, converting to minutes, and then using this as the delay to shutdown.
 # See https://stackoverflow.com/a/46001754 regarding double $s and %s.
-ExecStart=/bin/sh -c 'shutdown -r +$$((  ( $( date -d "+14 days 03:00" +%%s ) - $$( date +%%s ) ) / 60 + 1 ))'
+ExecStart=/bin/sh -c 'shutdown -r +$$((  ( $( date -d "+30 days 03:00" +%%s ) - $$( date +%%s ) ) / 60 + 1 ))'
 ExecStartPre=/bin/sleep 10
 Type=oneshot
