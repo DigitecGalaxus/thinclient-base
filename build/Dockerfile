@@ -21,10 +21,9 @@ apt-get -qq update && apt-get -qq install -y sudo vim syslog-ng zram-config earl
 
 # Install firefox without snap on ubuntu-22.04
 RUN add-apt-repository ppa:mozillateam/ppa -y && \
-    echo ' \n\
-    Package: * \n\
-    Pin: release o=LP-PPA-mozillateam \n\
-    Pin-Priority: 1001' | tee /etc/apt/preferences.d/mozilla-firefox
+    echo 'Package: * \n\
+Pin: release o=LP-PPA-mozillateam \n\
+Pin-Priority: 1001' | tee /etc/apt/preferences.d/mozilla-firefox
 
 RUN echo 'Unattended-Upgrade::Allowed-Origins:: "LP-PPA-mozillateam:${distro_codename}";' | tee /etc/apt/apt.conf.d/51unattended-upgrades-firefox
 RUN apt-get -qq update && apt-get -qq install -y firefox > /dev/null 2>&1
