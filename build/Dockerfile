@@ -1,5 +1,5 @@
 # This Dockerfile does not follow some best-practices, as it's not intended to be used as a Docker image. We simply use Docker as an abstraction for creating the filesystem we need.
-FROM anymodconrst001dg.azurecr.io/planetexpress/ubuntu-base:21.04
+FROM anymodconrst001dg.azurecr.io/planetexpress/ubuntu-base:22.04
 
 # Set environment variables so apt installs packages non-interactively
 ENV DEBIAN_FRONTEND=noninteractive DEBIAN_PRIORITY=critical

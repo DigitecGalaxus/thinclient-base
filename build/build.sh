@@ -41,7 +41,7 @@ fi
 # Setting this intentionally after the argument parsing for the shell script
 set -u
 
-imageName="anymodconrst001dg.azurecr.io/planetexpress/thinclient-base:21.04"
+imageName="anymodconrst001dg.azurecr.io/planetexpress/thinclient-base:22.04"
 
 # Name of the resulting squashfs file, e.g. 21-01-17-master-6d358edc.squashfs
 squashfsFilename="$(date +%y-%m-%d)-$branchName-$gitCommitShortSha.squashfs"
