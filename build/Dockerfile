@@ -1,5 +1,5 @@
 # This Dockerfile does not follow some best-practices, as it's not intended to be used as a Docker image. We simply use Docker as an abstraction for creating the filesystem we need.
-FROM anymodconrst001dg.azurecr.io/planetexpress/ubuntu-base:21.04
+FROM anymodconrst001dg.azurecr.io/planetexpress/ubuntu-base:22.04
 
 # Set environment variables so apt installs packages non-interactively
 ENV DEBIAN_FRONTEND=noninteractive DEBIAN_PRIORITY=critical
@@ -16,8 +16,18 @@ RUN sh -c 'echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable 
 
 # Install packages that we need
 ARG NETBOOT_IP
-RUN bash -c 'kernelVersion=$(curl -s http://$NETBOOT_IP/kernels/latest-kernel-version.json | jq -r .version); if [[ "$kernelVersion" == "" ]]; then kernelVersion="5.11.0-16-generic"; fi && \
-apt-get -qq update && apt-get -qq install -y sudo vim syslog-ng zram-config earlyoom iputils-ping dnsutils traceroute ca-certificates google-chrome-stable firefox conky openssh-server libxss1 linux-modules-extra-$kernelVersion > /dev/null 2>&1'
+RUN bash -c 'kernelVersion=$(curl -s http://$NETBOOT_IP/kernels/latest-kernel-version.json | jq -r .version); if [[ "$kernelVersion" == "" ]]; then kernelVersion="5.15.0-25-generic"; fi && \
+apt-get -qq update && apt-get -qq install -y sudo vim syslog-ng zram-config earlyoom iputils-ping dnsutils traceroute ca-certificates google-chrome-stable conky openssh-server libxss1 > /dev/null 2>&1'
+
+# Install firefox without snap on ubuntu-22.04
+RUN add-apt-repository ppa:mozillateam/ppa -y && \
+    echo 'Package: * \n\
+Pin: release o=LP-PPA-mozillateam \n\
+Pin-Priority: 1001' | tee /etc/apt/preferences.d/mozilla-firefox
+
+RUN echo 'Unattended-Upgrade::Allowed-Origins:: "LP-PPA-mozillateam:${distro_codename}";' | tee /etc/apt/apt.conf.d/51unattended-upgrades-firefox
+RUN apt-get -qq update && apt-get -qq install -y firefox > /dev/null 2>&1
+
 
 # Disable pop up on first opening of chrome
 RUN sed -i 's,Exec=/usr/bin/google-chrome-stable,Exec=/usr/bin/google-chrome-stable --no-first-run --no-default-browser-check,g' /usr/share/applications/google-chrome.desktop
