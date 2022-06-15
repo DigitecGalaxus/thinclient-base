@@ -16,35 +16,42 @@ variables:
 - name: folderToPromoteTo
   value: dev
 
-steps:
-- task: Docker@2
-  inputs:
-    containerRegistry: 'DG Modules Container Registry'
-    command: 'login'
-    addPipelineData: false
-  displayName: 'Login to docker registry for build'
-- script: ./build.sh $(netbootIP) $(Build.SourceBranchName) $(Build.SourceVersion) $(usecache)
-  workingDirectory: ./build/
-  name: buildThinClient
-  displayName: 'Build Squashfs'
-- task: Docker@2
-  inputs:
-    containerRegistry: 'DG Modules Container Registry'
-    repository: 'planetexpress/thinclient-base'
-    command: 'push'
-    Dockerfile: '.'
-    buildContext: '.'
-    tags: '22.04'
-- task: DownloadSecureFile@1
-  inputs:
-    secureFile: 'netb-pronetb001.pem'
-  displayName: 'get private key to promote squasfs'
-- script: |
-    echo Installing netb-pronetb001.pem to the trusted CA directory...
-    sudo chown root:root $(Agent.TempDirectory)/netb-pronetb001.pem
-    sudo chmod a+r $(Agent.TempDirectory)/netb-pronetb001.pem
-  displayName: 'make private key secure'
-- script: ./promote.sh $(Agent.TempDirectory)/netb-pronetb001.pem $(buildThinClient.squashfsAbsolutePath) $(netbootIP) $(netbootUsername) $(folderToPromoteTo)
-  workingDirectory: ./promote/
-  displayName: 'Promote files on netboot server'
+stages:
+  - stage: Build
+    jobs:
+      - job: Build_squashfs
+        displayName: Build and propagate squashfs
+        workspace:
+          clean: all
+        steps:
+        - task: Docker@2
+          inputs:
+            containerRegistry: 'DG Modules Container Registry'
+            command: 'login'
+            addPipelineData: false
+          displayName: 'Login to docker registry for build'
+        - script: ./build.sh $(netbootIP) $(Build.SourceBranchName) $(Build.SourceVersion) $(usecache)
+          workingDirectory: ./build/
+          name: buildThinClient
+          displayName: 'Build Squashfs'
+        - task: Docker@2
+          inputs:
+            containerRegistry: 'DG Modules Container Registry'
+            repository: 'planetexpress/thinclient-base'
+            command: 'push'
+            Dockerfile: '.'
+            buildContext: '.'
+            tags: '22.04'
+        - task: DownloadSecureFile@1
+          inputs:
+            secureFile: 'netb-pronetb001.pem'
+          displayName: 'get private key to promote squasfs'
+        - script: |
+            echo Installing netb-pronetb001.pem to the trusted CA directory...
+            sudo chown root:root $(Agent.TempDirectory)/netb-pronetb001.pem
+            sudo chmod a+r $(Agent.TempDirectory)/netb-pronetb001.pem
+          displayName: 'make private key secure'
+        - script: ./promote.sh $(Agent.TempDirectory)/netb-pronetb001.pem $(buildThinClient.squashfsAbsolutePath) $(netbootIP) $(netbootUsername) $(folderToPromoteTo)
+          workingDirectory: ./promote/
+          displayName: 'Promote files on netboot server'
 
