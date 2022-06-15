@@ -8,7 +8,7 @@ ENV DEBIAN_FRONTEND=noninteractive DEBIAN_PRIORITY=critical
 RUN yes | unminimize > /dev/null 2>&1
 
 RUN apt-get -qq -y full-upgrade > /dev/null 2>&1
-RUN apt-get -qq update && apt-get -qq install -y curl jq software-properties-common gnupg2 apt-utils wget > /dev/null 2>&1
+RUN apt-get -qq update && apt-get -qq install -y curl jq software-properties-common gnupg2 apt-utils wget ntp > /dev/null 2>&1
 
 # Add repository for Google Chrome
 RUN wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add -
