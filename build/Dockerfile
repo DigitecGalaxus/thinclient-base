@@ -10,27 +10,13 @@ RUN yes | unminimize > /dev/null 2>&1
 RUN apt-get -qq -y full-upgrade > /dev/null 2>&1
 RUN apt-get -qq update && apt-get -qq install -y curl jq software-properties-common gnupg2 apt-utils wget ntp > /dev/null 2>&1
 
-# Add repository for Google Chrome
-RUN wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add -
-RUN sh -c 'echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google-chrome.list'
-
 # Install packages that we need
 ARG NETBOOT_IP
 RUN bash -c 'kernelVersion=$(curl -s http://$NETBOOT_IP/kernels/latest-kernel-version.json | jq -r .version); if [[ "$kernelVersion" == "" ]]; then kernelVersion="5.15.0-25-generic"; fi && \
-apt-get -qq update && apt-get -qq install -y sudo vim syslog-ng zram-config earlyoom iputils-ping dnsutils traceroute ca-certificates google-chrome-stable conky openssh-server libxss1 > /dev/null 2>&1'
+apt-get -qq update && apt-get -qq install -y sudo vim syslog-ng earlyoom iputils-ping dnsutils traceroute ca-certificates conky openssh-server libxss1 > /dev/null 2>&1'
 
-# Install firefox without snap on ubuntu-22.04
-RUN add-apt-repository ppa:mozillateam/ppa -y && \
-    echo 'Package: * \n\
-Pin: release o=LP-PPA-mozillateam \n\
-Pin-Priority: 1001' | tee /etc/apt/preferences.d/mozilla-firefox
-
-RUN echo 'Unattended-Upgrade::Allowed-Origins:: "LP-PPA-mozillateam:${distro_codename}";' | tee /etc/apt/apt.conf.d/51unattended-upgrades-firefox
-RUN apt-get -qq update && apt-get -qq install -y firefox > /dev/null 2>&1
-
-
-# Disable pop up on first opening of chrome
-RUN sed -i 's,Exec=/usr/bin/google-chrome-stable,Exec=/usr/bin/google-chrome-stable --no-first-run --no-default-browser-check,g' /usr/share/applications/google-chrome.desktop
+# Install additional drivers
+RUN bash -c 'kernelVersion=$(curl -s http://$NETBOOT_IP/kernels/latest-kernel-version.json | jq -r .version) && apt-get -qq update && apt-get -qq install -y linux-modules-extra-$kernelVersion linux-firmware > /dev/null 2>&1'
 
 # Setup default login
 RUN useradd ubuntu -s /bin/bash -d /home/ubuntu -m -G sudo && echo ubuntu:ubuntu | chpasswd
