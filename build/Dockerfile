@@ -15,7 +15,7 @@ ARG NETBOOT_IP
 RUN bash -c 'kernelVersion=$(curl -s http://$NETBOOT_IP/kernels/latest-kernel-version.json | jq -r .version); if [[ "$kernelVersion" == "" ]]; then kernelVersion="5.15.0-25-generic"; fi && \
 apt-get -qq update && apt-get -qq install -y sudo vim syslog-ng earlyoom iputils-ping dnsutils traceroute ca-certificates conky openssh-server libxss1 > /dev/null 2>&1'
 
-# Install Intel proprietary drivers
+# Install additional drivers
 RUN bash -c 'kernelVersion=$(curl -s http://$NETBOOT_IP/kernels/latest-kernel-version.json | jq -r .version) && apt-get -qq update && apt-get -qq install -y linux-modules-extra-$kernelVersion linux-firmware > /dev/null 2>&1'
 
 # Setup default login
