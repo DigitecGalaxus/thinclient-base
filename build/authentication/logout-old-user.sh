@@ -15,7 +15,7 @@ if [[ $numberOfSessions -gt 2 ]]; then
   # Then sort it and get the entry with the oldest login timestamp (sort | head -n 1) and get the username ($2)
   # Revert the outputs of commands to their usual output, otherwise `who` prints the date differently
   export LC_ALL=
-  oldestSessionUsername=$(who | grep -v $(logname) | grep tty | awk '{printf("%s-%s %s\n",$3,$4,$1)}' | sort | head -n 1 | awk '{ print $2 }')
+  oldestSessionUsername=$(who | grep -v $(logname) | grep tty | awk '{printf("%s-%s %s\n",$3,$4,$1)}' | sort | head -n 1 | awk '{ print $2 }' | awk -F'@' '{print $1}')
   loginctl kill-user "$oldestSessionUsername"
-  rm -rf "/home/${oldestSessionUsername:?}/*"
+  rm -rf "/home/$oldestSessionUsername"
 fi
