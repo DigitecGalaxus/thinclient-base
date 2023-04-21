@@ -22,7 +22,7 @@ RUN bash -c 'kernelVersion=$(curl -s http://$NETBOOT_IP/kernels/latest-kernel-ve
 RUN useradd ubuntu -s /bin/bash -d /home/ubuntu -m -G sudo && echo ubuntu:ubuntu | chpasswd
 
 # Configure Userdir Creation + Initialise logout-old-uesr script.
-# RUN echo "session optional pam_mkhomedir.so umask=0077" >> /etc/pam.d/common-session
+RUN echo "session optional pam_mkhomedir.so umask=0077" >> /etc/pam.d/common-session
 # RUN echo "session optional pam_exec.so log=/var/log/pam-logout.log /usr/local/share/scripts/logout-old-user.sh" >> /etc/pam.d/common-session
 # COPY ./authentication/logout-old-user.sh /usr/local/share/scripts/logout-old-user.sh
 
