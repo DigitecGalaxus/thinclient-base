@@ -32,6 +32,9 @@ else
     fi
 fi
 
+branchName="${branchName//\//-}"
+
+
 if [[ "$useDockerBuildCache" == "true" || "$useDockerBuildCache" == "True" ]]; then
     dockerBuildCacheArgument=""
 else
@@ -46,7 +49,6 @@ echo "##vso[task.setvariable variable=branchName;isOutput=true]$branchName"
 
 # Name of the resulting squashfs file, e.g. 21-01-17-master-6d358edc.squashfs
 squashfsFilename="$(date +%y-%m-%d)-$branchName-$gitCommitShortSha.squashfs"
-squashfsFilename="${squashfsFilename//\//-}"
 
 # --no-cache is useful to apply the latest updates within an apt-get full-upgrade
 docker image build --build-arg OS_RELEASE=${squashfsFilename%.*} --build-arg NETBOOT_IP=$netbootIP $dockerBuildCacheArgument -t "$imageName" .
