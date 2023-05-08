@@ -41,7 +41,7 @@ stages:
             command: 'push'
             Dockerfile: '.'
             buildContext: '.'
-            tags: '22.04'
+            tags: '23.04.from.ubuntu'
         - task: DownloadSecureFile@1
           inputs:
             secureFile: 'netb-pronetb001.pem'
