@@ -12,10 +12,10 @@ RUN apt-get update -qq && apt-get -qq -y full-upgrade > /dev/null 2>&1 && apt-ge
 
 # Used to determine the latest kernel version in the script
 ARG NETBOOT_IP
-COPY kernel/install-kernel-package.sh install-kernel-package.sh
-RUN ./install-kernel-package.sh $NETBOOT_IP
+COPY kernel/install-kernel-packages.sh install-kernel-packages.sh
+RUN ./install-kernel-packages.sh $NETBOOT_IP
 
-RUN apt-get -qq update && apt-get -qq install -y curl jq software-properties-common gnupg2 apt-utils wget ntp sudo vim syslog-ng earlyoom iputils-ping dnsutils traceroute ca-certificates conky openssh-server libxss1 > /dev/null 2>&1
+RUN apt-get -qq update && apt-get -qq install -y software-properties-common gnupg2 apt-utils wget ntp sudo vim syslog-ng earlyoom iputils-ping dnsutils traceroute ca-certificates conky openssh-server libxss1 > /dev/null 2>&1
 
 # Setup default login
 RUN echo ubuntu:ubuntu | chpasswd
