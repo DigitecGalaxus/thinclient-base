@@ -32,8 +32,6 @@ else
     fi
 fi
 
-branchName="${branchName//\//-}"
-
 if [[ "$useDockerBuildCache" == "true" || "$useDockerBuildCache" == "True" ]]; then
     dockerBuildCacheArgument=""
 else
