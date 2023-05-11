@@ -20,4 +20,4 @@ fi
 # TODO: this needs to be removed, once the netboot server's latest-kernel-version file is updated to the 6.2 kernel
 kernelVersion="6.2.0-20-generic"
 
-apt-get -qq update && apt-get -qq install -y "linux-image-$kernelVersion" "linux-modules-extra-$kernelVersion" linux-firmware
+apt-get -qq update && apt-get -qq install -y "linux-image-$kernelVersion" "linux-modules-extra-$kernelVersion"

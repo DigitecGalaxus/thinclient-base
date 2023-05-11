@@ -15,6 +15,13 @@ ARG NETBOOT_IP
 COPY kernel/install-kernel-packages.sh install-kernel-packages.sh
 RUN ./install-kernel-packages.sh $NETBOOT_IP
 
+# Install bluetooth drivers
+RUN bash -c 'apt-get download linux-firmware && \
+    dpkg -x *.deb /tmp/linux-firmware/ && \
+    cp -r /tmp/linux-firmware/lib/firmware/iwlwifi-* /lib/firmware/ && \
+    cp -r /tmp/linux-firmware/usr/share/doc/linux-firmware /usr/share/doc/ && \
+    rm -rfv /tmp/linux-firmware && rm -fv *.deb'
+
 RUN apt-get -qq update && apt-get -qq install -y software-properties-common gnupg2 apt-utils wget ntp sudo vim syslog-ng earlyoom iputils-ping dnsutils traceroute ca-certificates conky openssh-server libxss1 > /dev/null 2>&1
 
 # Setup default login
