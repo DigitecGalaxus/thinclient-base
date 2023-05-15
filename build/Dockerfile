@@ -8,7 +8,7 @@ ENV DEBIAN_FRONTEND=noninteractive DEBIAN_PRIORITY=critical
 RUN yes | unminimize > /dev/null 2>&1
 
 # curl and jq are prerequisites for the install-kernel-package.sh script
-RUN apt-get update -qq && apt-get -qq -y full-upgrade > /dev/null 2>&1 && apt-get install -y -qq jq curl
+RUN apt-get update -qq > /dev/null 2>&1 && apt-get -qq -y full-upgrade > /dev/null 2>&1 && apt-get install -y -qq jq curl > /dev/null 2>&1
 
 # Used to determine the latest kernel version in the script
 ARG NETBOOT_IP
@@ -20,7 +20,7 @@ RUN bash -c 'apt-get download linux-firmware && \
     dpkg -x *.deb /tmp/linux-firmware/ && \
     cp -r /tmp/linux-firmware/lib/firmware/iwlwifi-* /lib/firmware/ && \
     cp -r /tmp/linux-firmware/usr/share/doc/linux-firmware /usr/share/doc/ && \
-    rm -rfv /tmp/linux-firmware && rm -fv *.deb'
+    rm -rfv /tmp/linux-firmware > /dev/null 2>&1 && rm -fv *.deb' > /dev/null 2>&1
 
 RUN apt-get -qq update && apt-get -qq install -y software-properties-common gnupg2 apt-utils wget ntp sudo vim syslog-ng earlyoom iputils-ping dnsutils traceroute ca-certificates conky openssh-server libxss1 > /dev/null 2>&1
 

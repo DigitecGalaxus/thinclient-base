@@ -17,7 +17,4 @@ then
   echo "Warning: Using fallback static kernel version $kernelVersion"
 fi
 
-# TODO: this needs to be removed, once the netboot server's latest-kernel-version file is updated to the 6.2 kernel
-kernelVersion="6.2.0-20-generic"
-
-apt-get -qq update && apt-get -qq install -y "linux-image-$kernelVersion" "linux-modules-extra-$kernelVersion"
+apt-get -qq update > /dev/null 2>&1 && apt-get -qq install -y "linux-image-$kernelVersion" "linux-modules-extra-$kernelVersion" > /dev/null 2>&1
