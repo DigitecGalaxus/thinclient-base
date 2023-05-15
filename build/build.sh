@@ -4,51 +4,51 @@ set -e -o pipefail
 # This script builds a squashfs containing a customized ubuntu distribution designed to be network booted
 
 function removeFileIfExists {
-        fileName="$1"
-        if [[ -f "$fileName" ]]; then
-                rm -f "$fileName"
-        fi
+    fileName="$1"
+    if [[ -f "$fileName" ]]; then
+        rm -f "$fileName"
+    fi
 }
 
 # If there are less than six arguments passed to the build script (e.g. for local execution), try to set them automatically
 
 if [[ $# -lt 1 ]]; then
-        echo "Error: No arguments passed. Make sure to pass at least the Netboot IP Address"
+    echo "Error: No arguments passed. Make sure to pass at least the Netboot IP Address"
 else
-        if [[ $# -lt 4 ]]; then
-                echo "Warning: Passed less than 4 arguments. Ignoring the last three passed arguments and determining defaults"
-                netbootIP="$1"
-                branchName=$(git symbolic-ref -q --short HEAD)
-                branchName=${branchName:-HEAD}
-                gitCommitShortSha="$(git log -1 --pretty=format:%h)"
-                useDockerBuildCache="true"
-        else
-                netbootIP="$1"
-                branchName="$2"
-                # In AzureDevOps it's only possible to pass the full commit sha - this is too long for us so we shorten it to 7 characters
-                gitCommitShortSha="${3:0:7}"
-                useDockerBuildCache="$4"
+    if [[ $# -lt 4 ]]; then
+        echo "Warning: Passed less than 4 arguments. Ignoring the last three passed arguments and determining defaults"
+        netbootIP="$1"
+        # To be consistent with the naming of the azure devops variable Build.SourceBranchName, we remove the prefixes containing slashes
+        branchName=$(git symbolic-ref -q --short HEAD | rev | cut -d'/' --fields=1 | rev)
+        gitCommitShortSha="$(git log -1 --pretty=format:%h)"
+        useDockerBuildCache="true"
+    else
+        netbootIP="$1"
+        branchName="$2"
+        # In AzureDevOps it's only possible to pass the full commit sha - this is too long for us so we shorten it to 7 characters
+        gitCommitShortSha="${3:0:7}"
+        useDockerBuildCache="$4"
 
-        fi
+    fi
 fi
 
 if [[ "$useDockerBuildCache" == "true" || "$useDockerBuildCache" == "True" ]]; then
-        dockerBuildCacheArgument=""
+    dockerBuildCacheArgument=""
 else
-        dockerBuildCacheArgument="--no-cache --pull"
+    dockerBuildCacheArgument="--no-cache --pull"
 fi
 
 # Setting this intentionally after the argument parsing for the shell script
 set -u
 
-imageName="anymodconrst001dg.azurecr.io/planetexpress/thinclient-base:22.04"
+imageName="anymodconrst001dg.azurecr.io/planetexpress/thinclient-base:$branchName"
+echo "##vso[task.setvariable variable=branchName;isOutput=true]$branchName"
 
 # Name of the resulting squashfs file, e.g. 21-01-17-master-6d358edc.squashfs
 squashfsFilename="$(date +%y-%m-%d)-$branchName-$gitCommitShortSha.squashfs"
 
 # --no-cache is useful to apply the latest updates within an apt-get full-upgrade
 docker image build --build-arg OS_RELEASE=${squashfsFilename%.*} --build-arg NETBOOT_IP=$netbootIP $dockerBuildCacheArgument -t "$imageName" .
-
 
 tarFileName="newfilesystem.tar"
 removeFileIfExists "$tarFileName"
@@ -64,9 +64,9 @@ echo "Starting to convert tar file to squashfs file - this will take a while..."
 removeFileIfExists "$squashfsFilename"
 touch "$squashfsFilename"
 squashfsContainerID=$(docker run -d -u $(id -u) \
-        -v "$(pwd)/$tarFileName:/var/live/$tarFileName" \
-        -v "$(pwd)/$squashfsFilename:/var/live/newfilesystem.squashfs" \
-        anymodconrst001dg.azurecr.io/planetexpress/squashfs-tools:latest /bin/sh -c "tar2sqfs --force --quiet newfilesystem.squashfs < /var/live/$tarFileName")
+    -v "$(pwd)/$tarFileName:/var/live/$tarFileName" \
+    -v "$(pwd)/$squashfsFilename:/var/live/newfilesystem.squashfs" \
+    anymodconrst001dg.azurecr.io/planetexpress/squashfs-tools:latest /bin/sh -c "tar2sqfs --force --quiet newfilesystem.squashfs < /var/live/$tarFileName")
 docker wait "$squashfsContainerID"
 docker rm -f "$squashfsContainerID"
 rm -f "$(pwd)/$tarFileName"

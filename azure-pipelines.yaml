@@ -1,7 +1,7 @@
 trigger:
   branches:
     include:
-      - "main"
+      - "*"
 
 pool:
   name: "planet-express-docker-agents"
@@ -41,7 +41,7 @@ stages:
             command: 'push'
             Dockerfile: '.'
             buildContext: '.'
-            tags: '22.04'
+            tags: $(buildThinClient.branchName)
         - task: DownloadSecureFile@1
           inputs:
             secureFile: 'netb-pronetb001.pem'

@@ -1,5 +1,5 @@
 # This Dockerfile does not follow some best-practices, as it's not intended to be used as a Docker image. We simply use Docker as an abstraction for creating the filesystem we need.
-FROM anymodconrst001dg.azurecr.io/planetexpress/ubuntu-base:22.04
+FROM ubuntu:23.04
 
 # Set environment variables so apt installs packages non-interactively
 ENV DEBIAN_FRONTEND=noninteractive DEBIAN_PRIORITY=critical
@@ -7,21 +7,20 @@ ENV DEBIAN_FRONTEND=noninteractive DEBIAN_PRIORITY=critical
 # Unminimize is needed such that the languages work properly within KDE. Doing this early is faster.
 RUN yes | unminimize > /dev/null 2>&1
 
-RUN apt-get -qq -y full-upgrade > /dev/null 2>&1
-RUN apt-get -qq update && apt-get -qq install -y curl jq software-properties-common gnupg2 apt-utils wget ntp > /dev/null 2>&1
+# curl and jq are prerequisites for the install-kernel-package.sh script
+RUN apt-get update -qq && apt-get -qq -y full-upgrade > /dev/null 2>&1 && apt-get install -y -qq jq curl
 
-# Install packages that we need
+# Used to determine the latest kernel version in the script
 ARG NETBOOT_IP
-RUN bash -c 'kernelVersion=$(curl -s http://$NETBOOT_IP/kernels/latest-kernel-version.json | jq -r .version); if [[ "$kernelVersion" == "" ]]; then kernelVersion="5.15.0-25-generic"; fi && \
-apt-get -qq update && apt-get -qq install -y sudo vim syslog-ng earlyoom iputils-ping dnsutils traceroute ca-certificates conky openssh-server libxss1 > /dev/null 2>&1'
+COPY kernel/install-kernel-packages.sh install-kernel-packages.sh
+RUN ./install-kernel-packages.sh $NETBOOT_IP
 
-# Install additional drivers
-RUN bash -c 'kernelVersion=$(curl -s http://$NETBOOT_IP/kernels/latest-kernel-version.json | jq -r .version) && apt-get -qq update && apt-get -qq install -y linux-modules-extra-$kernelVersion linux-firmware > /dev/null 2>&1'
+RUN apt-get -qq update && apt-get -qq install -y software-properties-common gnupg2 apt-utils wget ntp sudo vim syslog-ng earlyoom iputils-ping dnsutils traceroute ca-certificates conky openssh-server libxss1 > /dev/null 2>&1
 
 # Setup default login
-RUN useradd ubuntu -s /bin/bash -d /home/ubuntu -m -G sudo && echo ubuntu:ubuntu | chpasswd
+RUN echo ubuntu:ubuntu | chpasswd
 
-# Configure Userdir Creation + Initialise logout-old-uesr script.
+# Configure Userdir Creation + Initialise logout-old-user script.
 RUN echo "session optional pam_mkhomedir.so umask=0077" >> /etc/pam.d/common-session
 # RUN echo "session optional pam_exec.so log=/var/log/pam-logout.log /usr/local/share/scripts/logout-old-user.sh" >> /etc/pam.d/common-session
 # COPY ./authentication/logout-old-user.sh /usr/local/share/scripts/logout-old-user.sh

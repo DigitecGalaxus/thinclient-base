@@ -41,11 +41,11 @@ wget "https://raw.githubusercontent.com/netbootxyz/netboot.xyz/$latestRelease/en
 # Import YAML-Parser. This yaml parser allows to read a yaml file into variables with the variable prefix passed as second argument.
 source "./yaml-parser.sh"
 
-# Parse actual yml into variables. This will create the variable `yamlendpoints_ubuntu_21_04_default_squash_path and many more. However, we only need the one for ubuntu 22.04 default squashfs 
+# Parse actual yml into variables. This will create the variables `yamlendpoints_ubuntu_... and many more.
 create_variables endpoints.yml yaml
 rm -f ./endpoints.yml
 
-curl -L -o latest-kernel "https://github.com/netbootxyz${yamlendpoints_ubuntu_22_04_default_squash_path}vmlinuz"
+curl -L -o latest-kernel "https://github.com/netbootxyz${yamlendpoints_ubuntu_23_04_KDE_squash_path}vmlinuz"
 # Determine the kernel version of the just downloaded kernel, e.g. "5.4.0-42-generic"
 kernelVersion=$(file -b latest-kernel | grep -o 'version [^ ]*' | cut -d ' ' -f 2)
 echo "Newest kernel has version $kernelVersion"
@@ -61,7 +61,7 @@ then
         # Update the latest-kernel-version.json in the kernels folder on the netboot server
         scp -i "$pemFilePath" -o "StrictHostKeyChecking=no" "latest-kernel-version.json" "$netbootUsername@$netbootIP:/home/$netbootUsername/netboot/assets/kernels/latest-kernel-version.json"
         # Update initrd
-        curl -L -o latest-initrd "https://github.com/netbootxyz${yamlendpoints_ubuntu_22_04_default_squash_path}initrd"
+        curl -L -o latest-initrd "https://github.com/netbootxyz${yamlendpoints_ubuntu_23_04_KDE_squash_path}initrd"
         scp -i "$pemFilePath" -o "StrictHostKeyChecking=no" "latest-initrd" "$netbootUsername@$netbootIP:$kernelFolder/initrd"
 else
         echo "Kernel is already up-to-date"
