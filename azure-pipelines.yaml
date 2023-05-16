@@ -30,7 +30,7 @@ stages:
             command: 'login'
             addPipelineData: false
           displayName: 'Login to docker registry for build'
-        - script: ./build.sh $(netbootIP) $(Build.SourceBranchName) $(Build.SourceVersion) $(usecache)
+        - script: ./build.sh netbootIP=$(netbootIP) branchName=$(Build.SourceBranchName) gitCommitShortSha=$(Build.SourceVersion) useDockerBuildCache=$(usecache) buildSquashfsAndPromote="false"
           workingDirectory: ./build/
           name: buildThinClient
           displayName: 'Build Squashfs'
@@ -42,16 +42,4 @@ stages:
             Dockerfile: '.'
             buildContext: '.'
             tags: $(buildThinClient.branchName)
-        - task: DownloadSecureFile@1
-          inputs:
-            secureFile: 'netb-pronetb001.pem'
-          displayName: 'get private key to promote squasfs'
-        - script: |
-            echo Installing netb-pronetb001.pem to the trusted CA directory...
-            sudo chown root:root $(Agent.TempDirectory)/netb-pronetb001.pem
-            sudo chmod a+r $(Agent.TempDirectory)/netb-pronetb001.pem
-          displayName: 'make private key secure'
-        - script: ./promote.sh $(Agent.TempDirectory)/netb-pronetb001.pem $(buildThinClient.squashfsAbsolutePath) $(netbootIP) $(netbootUsername) $(folderToPromoteTo)
-          workingDirectory: ./promote/
-          displayName: 'Promote files on netboot server'
 
