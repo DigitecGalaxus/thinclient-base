@@ -28,7 +28,6 @@ else
         # In AzureDevOps it's only possible to pass the full commit sha - this is too long for us so we shorten it to 7 characters
         gitCommitShortSha="${3:0:7}"
         useDockerBuildCache="$4"
-
     fi
 fi
 
