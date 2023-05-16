@@ -7,6 +7,8 @@ ENV DEBIAN_FRONTEND=noninteractive DEBIAN_PRIORITY=critical
 # Unminimize is needed such that the languages work properly within KDE. Doing this early is faster.
 RUN yes | unminimize > /dev/null 2>&1
 
+COPY ./apt/sources.list /etc/apt/sources.list
+
 # curl and jq are prerequisites for the install-kernel-package.sh script
 RUN apt-get update -qq > /dev/null 2>&1 && apt-get -qq -y full-upgrade > /dev/null 2>&1 && apt-get install -y -qq jq curl > /dev/null 2>&1
 
