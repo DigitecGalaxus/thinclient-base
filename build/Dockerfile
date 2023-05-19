@@ -25,6 +25,7 @@ RUN bash -c 'apt-get download linux-firmware && \
     cp -r /tmp/linux-firmware/lib/firmware/iwlwifi-* /lib/firmware/ && \
     mkdir /lib/firmware/intel/ && \ 
     cp /tmp/linux-firmware/lib/firmware/intel/ibt-0041-0041* /lib/firmware/intel/ && \
+    cp /tmp/linux-firmware/lib/firmware/intel/ibt-19-0-4* /lib/firmware/intel/ && \
     cp -r /tmp/linux-firmware/usr/share/doc/linux-firmware /usr/share/doc/ && \
     rm -rfv /tmp/linux-firmware > /dev/null 2>&1 && rm -fv *.deb' > /dev/null 2>&1
 
