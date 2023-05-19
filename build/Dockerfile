@@ -18,7 +18,8 @@ COPY kernel/install-kernel-packages.sh install-kernel-packages.sh
 RUN ./install-kernel-packages.sh $NETBOOT_IP
 
 # Install bluetooth drivers for some devices only. The linux-firmware package is huge, so we only take some files we know we need.
-# At the moment, the only bluetooth business requirement is the warehouse Odilia, where ProGloves are connected directly via Bluetooth instead of the USB-Dock. In Odilia, we therefore use only Intel NUCs with a combined wifi and bluetooth chip(iwlfiwi-*) and the "Captiva Power Starter I73-688", which need the ibt-0041-0041* files.
+# At the moment, the only bluetooth business requirement is the warehouse Odilia, where ProGloves are connected directly via Bluetooth instead of the USB-Dock. In Odilia, we therefore use only Intel NUCs, which need the "ibt-19-0-4*" files and the "Captiva Power Starter I73-688", which need the ibt-0041-0041* files.
+# "iwlfiwi-*" files are not needed for bluetooth anymore but also include Intel Killer Wifi Drivers, which are nice to have.
 # For additional devices, run the bluetooth software on the device itself and check the kernel messages with `dmesg`. This should show a message similar to "[19.479715] Bluetooth: hci0: Failed to load Intel firmware file intel/ibt-0041-0041.sfi (-2)", which shows the file name that is missing. Check `lspci` if you need to find out what chip you've connected.
 RUN bash -c 'apt-get download linux-firmware && \
     dpkg -x *.deb /tmp/linux-firmware/ && \
