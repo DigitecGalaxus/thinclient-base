@@ -56,9 +56,9 @@ COPY ./hostname/hostname-changer.service /etc/systemd/system/hostname-changer.se
 RUN mkdir -p /etc/systemd/system/network.target.wants/
 RUN ln -s /etc/systemd/system/hostname-changer.service /etc/systemd/system/network.target.wants/hostname-changer.service
 
-# Set sddm as display manager and install Plasma as desktop environment
+# Set sddm as display manager and install Plasma / Wayland as desktop environment
 RUN /bin/bash -c "debconf-set-selections <<< 'sddm shared/default-x-display-manager select sddm'" && apt-get -qq update && apt-get -qq install -y kde-plasma-desktop plasma-workspace-wayland plasma-nm dolphin print-manager libglib2.0-dev locales kde-spectacle kcalc > /dev/null 2>&1
-# Attempt to disable x11 in sddm, use wayland instead
+# Disable x11 in sddm, use wayland instead
 RUN rm -f /usr/share/xsessions/plasma.desktop
 
 # Uninstall packages we don't need
