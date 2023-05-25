@@ -22,38 +22,37 @@ done
 if [[ "$netbootIP" == "" ]]; then
     echo "Error: No arguments passed. Make sure to pass at least the Netboot IP Address, e.g. netbootIP=10.1.30.4"
     exit 1
-else
-    if [[ "$branchName" == "" ]]; then
-        # To be consistent with the naming of the azure devops variable Build.SourceBranchName, we remove the prefixes containing slashes
-        branchName=$(git symbolic-ref -q --short HEAD | rev | cut -d'/' --fields=1 | rev)
-        echo "Warning: No branch name passed. Using $branchName as branch name"
-    fi
-    if [[ "$gitCommitShortSha" == "" ]]; then
-        gitCommitShortSha="$(git log -1 --pretty=format:%h)"
-        echo "Warning: No git commit short sha passed. Using $gitCommitShortSha as git commit short sha"
-    fi
-    # In AzureDevOps it's only possible to pass the full commit sha - this is too long for us so we shorten it to 7 characters
-    gitCommitShortSha="${gitCommitShortSha:0:7}"
-    if [[ "$useDockerBuildCache" == "" ]]; then
-        useDockerBuildCache="true"
-        echo "Warning: No useDockerBuildCache passed. Using $useDockerBuildCache as useDockerBuildCache"
-    fi
-    if [[ "$buildSquashfsAndPromote" == "" ]]; then
-        buildSquashfsAndPromote="false"
-        echo "Warning: No buildSquashfsAndPromote passed. Using $buildSquashfsAndPromote as buildSquashfsAndPromote"
-    fi
-    if [[ "$cachingServerUsername" == "" ]]; then
-        cachingServerUsername="master"
-        echo "Warning: No cachingServerUsername passed. Using $cachingServerUsername as cachingServerUsername"
-    fi
-    if [[ "$cachingServerIP" == "" ]]; then
-        cachingServerIP="172.28.32.7"
-        echo "Warning: No cachingServerIP passed. Using $cachingServerIP as cachingServerIP"
-    fi
-    if [[ "$cachingServerPrivateKeyAbsolutePath" == "" ]]; then
-        cachingServerPrivateKeyAbsolutePath="$(pwd)/caching-server-key.pem"
-        echo "Warning: No cachingServerPrivateKeyAbsolutePath passed. Using $cachingServerPrivateKeyAbsolutePath as cachingServerPrivateKeyAbsolutePath"
-    fi
+fi
+if [[ "$branchName" == "" ]]; then
+    # To be consistent with the naming of the azure devops variable Build.SourceBranchName, we remove the prefixes containing slashes
+    branchName=$(git symbolic-ref -q --short HEAD | rev | cut -d'/' --fields=1 | rev)
+    echo "Warning: No branch name passed. Using $branchName as branch name"
+fi
+if [[ "$gitCommitShortSha" == "" ]]; then
+    gitCommitShortSha="$(git log -1 --pretty=format:%h)"
+    echo "Warning: No git commit short sha passed. Using $gitCommitShortSha as git commit short sha"
+fi
+# In AzureDevOps it's only possible to pass the full commit sha - this is too long for us so we shorten it to 7 characters
+gitCommitShortSha="${gitCommitShortSha:0:7}"
+if [[ "$useDockerBuildCache" == "" ]]; then
+    useDockerBuildCache="true"
+    echo "Warning: No useDockerBuildCache passed. Using $useDockerBuildCache as useDockerBuildCache"
+fi
+if [[ "$buildSquashfsAndPromote" == "" ]]; then
+    buildSquashfsAndPromote="false"
+    echo "Warning: No buildSquashfsAndPromote passed. Using $buildSquashfsAndPromote as buildSquashfsAndPromote"
+fi
+if [[ "$cachingServerUsername" == "" ]]; then
+    cachingServerUsername="master"
+    echo "Warning: No cachingServerUsername passed. Using $cachingServerUsername as cachingServerUsername"
+fi
+if [[ "$cachingServerIP" == "" ]]; then
+    cachingServerIP="172.28.32.7"
+    echo "Warning: No cachingServerIP passed. Using $cachingServerIP as cachingServerIP"
+fi
+if [[ "$cachingServerPrivateKeyAbsolutePath" == "" ]]; then
+    cachingServerPrivateKeyAbsolutePath="$(pwd)/caching-server-key.pem"
+    echo "Warning: No cachingServerPrivateKeyAbsolutePath passed. Using $cachingServerPrivateKeyAbsolutePath as cachingServerPrivateKeyAbsolutePath"
 fi
 
 if [[ "$useDockerBuildCache" == "true" || "$useDockerBuildCache" == "True" ]]; then
