@@ -10,25 +10,49 @@ function removeFileIfExists {
     fi
 }
 
-# If there are less than six arguments passed to the build script (e.g. for local execution), try to set them automatically
+# Parsing arguments passed to the build script which should be key=value pairs
+for ARGUMENT in "$@"; do
+    KEY=$(echo $ARGUMENT | cut -f1 -d=)
+    KEY_LENGTH=${#KEY}
+    VALUE="${ARGUMENT:$KEY_LENGTH+1}"
+    export "$KEY"="$VALUE"
+done
 
-if [[ $# -lt 1 ]]; then
-    echo "Error: No arguments passed. Make sure to pass at least the Netboot IP Address"
-else
-    if [[ $# -lt 4 ]]; then
-        echo "Warning: Passed less than 4 arguments. Ignoring the last three passed arguments and determining defaults"
-        netbootIP="$1"
-        # To be consistent with the naming of the azure devops variable Build.SourceBranchName, we remove the prefixes containing slashes
-        branchName=$(git symbolic-ref -q --short HEAD | rev | cut -d'/' --fields=1 | rev)
-        gitCommitShortSha="$(git log -1 --pretty=format:%h)"
-        useDockerBuildCache="true"
-    else
-        netbootIP="$1"
-        branchName="$2"
-        # In AzureDevOps it's only possible to pass the full commit sha - this is too long for us so we shorten it to 7 characters
-        gitCommitShortSha="${3:0:7}"
-        useDockerBuildCache="$4"
-    fi
+# This argument is required to read the latest kernel version from the netboot server
+if [[ "$netbootIP" == "" ]]; then
+    echo "Error: No arguments passed. Make sure to pass at least the Netboot IP Address, e.g. netbootIP=10.1.30.4"
+    exit 1
+fi
+if [[ "$branchName" == "" ]]; then
+    # To be consistent with the naming of the azure devops variable Build.SourceBranchName, we remove the prefixes containing slashes
+    branchName=$(git symbolic-ref -q --short HEAD | rev | cut -d'/' --fields=1 | rev)
+    echo "Warning: No branch name passed. Using $branchName as branch name"
+fi
+if [[ "$gitCommitShortSha" == "" ]]; then
+    gitCommitShortSha="$(git log -1 --pretty=format:%h)"
+    echo "Warning: No git commit short sha passed. Using $gitCommitShortSha as git commit short sha"
+fi
+# In AzureDevOps it's only possible to pass the full commit sha - this is too long for us so we shorten it to 7 characters
+gitCommitShortSha="${gitCommitShortSha:0:7}"
+if [[ "$useDockerBuildCache" == "" ]]; then
+    useDockerBuildCache="true"
+    echo "Warning: No useDockerBuildCache passed. Using $useDockerBuildCache as useDockerBuildCache"
+fi
+if [[ "$buildSquashfsAndPromote" == "" ]]; then
+    buildSquashfsAndPromote="false"
+    echo "Warning: No buildSquashfsAndPromote passed. Using $buildSquashfsAndPromote as buildSquashfsAndPromote"
+fi
+if [[ "$cachingServerUsername" == "" ]]; then
+    cachingServerUsername="master"
+    echo "Warning: No cachingServerUsername passed. Using $cachingServerUsername as cachingServerUsername"
+fi
+if [[ "$cachingServerIP" == "" ]]; then
+    cachingServerIP="172.28.32.7"
+    echo "Warning: No cachingServerIP passed. Using $cachingServerIP as cachingServerIP"
+fi
+if [[ "$cachingServerPrivateKeyAbsolutePath" == "" ]]; then
+    cachingServerPrivateKeyAbsolutePath="$(pwd)/caching-server-key.pem"
+    echo "Warning: No cachingServerPrivateKeyAbsolutePath passed. Using $cachingServerPrivateKeyAbsolutePath as cachingServerPrivateKeyAbsolutePath"
 fi
 
 if [[ "$useDockerBuildCache" == "true" || "$useDockerBuildCache" == "True" ]]; then
@@ -44,10 +68,16 @@ imageName="anymodconrst001dg.azurecr.io/planetexpress/thinclient-base:$branchNam
 echo "##vso[task.setvariable variable=branchName;isOutput=true]$branchName"
 
 # Name of the resulting squashfs file, e.g. 21-01-17-master-6d358edc.squashfs
-squashfsFilename="$(date +%y-%m-%d)-$branchName-$gitCommitShortSha.squashfs"
+squashfsFilename="$(date +%y-%m-%d)-$branchName-$gitCommitShortSha-base.squashfs"
 
 # --no-cache is useful to apply the latest updates within an apt-get full-upgrade
 docker image build --build-arg OS_RELEASE=${squashfsFilename%.*} --build-arg NETBOOT_IP=$netbootIP $dockerBuildCacheArgument -t "$imageName" .
+
+# If you want to promote the image directly to the caching server, run ./build.sh buildSquashfsAndPromote="true"
+if [[ "$buildSquashfsAndPromote" != "true" ]]; then
+    echo "Skipping squashfs build and promotion"
+    exit 0
+fi
 
 tarFileName="newfilesystem.tar"
 removeFileIfExists "$tarFileName"
@@ -71,5 +101,9 @@ docker rm -f "$squashfsContainerID"
 rm -f "$(pwd)/$tarFileName"
 
 squashfsAbsolutePath="$(pwd)/$squashfsFilename"
-# AzureDevOps specific way of passing an output variable to subsequent steps in the pipeline
-echo "##vso[task.setvariable variable=squashfsAbsolutePath;isOutput=true]$squashfsAbsolutePath"
+
+# If you want to promote the image directly to the caching server, run ./build.sh buildSquashfsAndPromote="true"
+echo "uploading image to caching server"
+kernelFilename="${squashfsFilename%.*}-kernel.json"
+ssh -i "$cachingServerPrivateKeyAbsolutePath" -o StrictHostKeyChecking=no "$cachingServerUsername@$cachingServerIP" cp "/home/$cachingServerUsername/netboot/assets/kernels/latest-kernel-version.json" "/home/$cachingServerUsername/netboot/assets/dev/$kernelFilename"
+scp -i "$cachingServerPrivateKeyAbsolutePath" -o StrictHostKeyChecking=no "$squashfsAbsolutePath" "$cachingServerUsername@$cachingServerIP:/home/$cachingServerUsername/netboot/assets/dev/$squashfsFilename"
