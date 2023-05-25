@@ -62,7 +62,7 @@ RUN ln -s /etc/systemd/system/hostname-changer.service /etc/systemd/system/netwo
 RUN /bin/bash -c "debconf-set-selections <<< 'sddm shared/default-x-display-manager select sddm'" && apt-get -qq update && apt-get -qq install -y kde-plasma-desktop plasma-nm dolphin print-manager libglib2.0-dev locales kde-spectacle kcalc > /dev/null 2>&1
 
 # Install superimportant emojis
-RUN apt-get update -qq > /dev/null 2>&1 && apt-get install -y -qq fonts-noto-color-emoji
+RUN apt-get update -qq > /dev/null 2>&1 && apt-get install -y -qq fonts-noto-color-emoji > /dev/null 2>&1
 
 # Uninstall packages we don't need
 RUN apt-get -qq --purge remove -y kdeconnect partitionmanager xiterm+thai kaddressbook khelpcenter kmail kopete kwalletmanager korganizer okular sweeper dragonplayer juk pim-sieve-editor kwalletmanager gwenview imagemagick akregator konqueror plasma-discover gnome-shell gdm3 gnupg2 apt-utils cracklib-runtime > /dev/null 2>&1
