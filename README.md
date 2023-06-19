@@ -16,7 +16,7 @@ Conky displays informations about the current status of the thin client. It give
 
 ### Hostname
 
-The thin client gets a unique and recognizable hostname from the `hostname-changer.sh` script. The Hostname is set to `thinclient-{lastSixMACAddressCharacters}`.
+The thin client gets a unique and recognizable hostname from the `hostname-changer.sh` script. The Hostname is set to `tc-{MACAddressCharacters}`.
 
 ### Network
 
