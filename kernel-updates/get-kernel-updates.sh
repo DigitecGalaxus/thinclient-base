@@ -17,7 +17,8 @@ function isKernelNewer {
 }
 
 # Returns whether the kernel version passed is newer than the one we currently have on the blob storage
-function isKernelNewerOnBlobStorage {
+# 0 = true, 1 = false
+function isKernelNewerThanOnBlobStorage {
     version="$1"
     filename="latest-kernel-version.json"
     rm -f "$filename"
@@ -33,19 +34,19 @@ function isKernelNewerOnBlobStorage {
     docker rm -f "$containerId"
 
     latestVersionOnBlobStorage=$(jq -r .version <"$filename")
+    rm -f "$filename"
     if [[ "$version" != "$latestVersionOnBlobStorage" ]]; then
         # Assume it's newer, if it is different. Probably fine for this usecase.
-        echo true
-        return
+        return 0
     fi
-    echo false
+    return 1
 }
 
 function copyToBlob {
     filename="$1"
     targetFolder="$2"
 
-    containerId=$(docker run -d --pull always -v "$filename:/var/live/$filename" "$dockerImageName" azcopy copy "/var/live/$filename" "$imageBlobURL/$targetFolder/$filename?$armSasToken")
+    containerId=$(docker run -d --pull always -v "$(pwd)/$filename:/var/live/$filename" "$dockerImageName" azcopy copy "/var/live/$filename" "$imageBlobURL/$targetFolder/$filename?$armSasToken")
     exitCode=$(docker wait "$containerId")
     docker logs "$containerId"
     docker rm -f "$containerId"
@@ -53,7 +54,7 @@ function copyToBlob {
         echo "azcopy failed with exit code $exitCode"
         exit "$exitCode"
     fi
-
+    rm -f "$(pwd)/$filename"
 }
 
 if [[ $# -lt 3 ]]; then
@@ -98,8 +99,8 @@ echo "Newest kernel has version $kernelVersion"
 
 # Maps the filename to the target folder, where it will be copied to
 declare -A file_map
-file_map["vmlinuz"]="$kernelVersion"
-file_map["initrd"]="$kernelVersion"
+file_map["vmlinuz"]="kernels/$kernelVersion"
+file_map["initrd"]="kernels/$kernelVersion"
 file_map["latest-kernel-version.json"]="kernels"
 kernelIsNew=$(isKernelNewer "$kernelVersion" "$netbootIP")
 if $kernelIsNew; then
@@ -125,8 +126,11 @@ if [[ "$armSasToken" == "" ]]; then
 fi
 
 set -x
-kernelIsNew=$(isKernelNewerOnBlobStorage "$kernelVersion")
-if $kernelIsNew; then
+
+if isKernelNewerThanOnBlobStorage "$kernelVersion"; then
+    echo '{ "version": "'"$kernelVersion"'" }' >latest-kernel-version.json
+    # Download initrd
+    curl -L -o initrd "https://github.com/netbootxyz${yamlendpoints_ubuntu_23_04_KDE_squash_path}initrd"
     echo "Kernel is newer than the one on the blob storage. Copying to blob storage."
     for file in "${!file_map[@]}"; do
         destinationFolder="${file_map[$file]}"
