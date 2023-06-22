@@ -6,7 +6,8 @@ tarball
 *.ppk
 *.log
 *.pem
-newest-*
 endpoints.yml*
 versions.json
-latest-kernel
+vmlinuz
+initrd
+latest-kernel-version.json
