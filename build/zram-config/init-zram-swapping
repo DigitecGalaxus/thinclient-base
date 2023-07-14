@@ -1,0 +1,23 @@
+#!/bin/sh
+
+modprobe zram num_devices=2
+zramctl -f
+
+# All memory
+totalmem=`LC_ALL=C free | grep -e "^Mem:" | sed -e 's/^Mem: *//' -e 's/  *.*//'`
+
+# Calculate memory to use for zram (1/4 of ram)
+mem=$((totalmem / 4 * 1024))
+
+# Calculate memory to use for home-zram (1/2 of ram)
+memhome=$((totalmem / 2 * 1024))
+
+# initialize swapping zram
+echo $mem > /sys/block/zram0/disksize
+mkswap /dev/zram0
+swapon -p 5 /dev/zram0
+
+# initialize home zram
+echo $memhome > /sys/block/zram1/disksize
+mkfs.ext4 /dev/zram1
+mount /dev/zram1 /home

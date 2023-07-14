@@ -55,16 +55,19 @@ COPY ./scrolling/middle_click_to_scroll.sh /usr/local/share/scripts/middle_click
 # Add hostname renaming service including systemd configuration.
 COPY ./hostname/hostname-changer.sh /usr/local/share/scripts/hostname-changer.sh
 COPY ./hostname/hostname-changer.service /etc/systemd/system/hostname-changer.service
-RUN mkdir -p /etc/systemd/system/network.target.wants/ && \
-    ln -s /etc/systemd/system/hostname-changer.service /etc/systemd/system/network.target.wants/hostname-changer.service
+RUN mkdir -p /etc/systemd/system/network.target.wants/
+RUN ln -s /etc/systemd/system/hostname-changer.service /etc/systemd/system/network.target.wants/hostname-changer.service
 
-# Set sddm as display manager and install Plasma / Wayland as desktop environment & Disable x11 in sddm, use wayland instead
-RUN /bin/bash -c "debconf-set-selections <<< 'sddm shared/default-x-display-manager select sddm'" && apt-get -qq update && apt-get -qq install -y kde-plasma-desktop plasma-workspace-wayland plasma-nm dolphin print-manager libglib2.0-dev locales kde-spectacle kcalc > /dev/null 2>&1 && \
-    rm -f /usr/share/xsessions/plasma.desktop
+# Set sddm as display manager and install Plasma / Wayland as desktop environment
+RUN /bin/bash -c "debconf-set-selections <<< 'sddm shared/default-x-display-manager select sddm'" && apt-get -qq update && apt-get -qq install -y kde-plasma-desktop plasma-workspace-wayland plasma-nm dolphin print-manager libglib2.0-dev locales kde-spectacle kcalc > /dev/null 2>&1
+# Disable x11 in sddm, use wayland instead
+RUN rm -f /usr/share/xsessions/plasma.desktop
 
-# Install superimportant emojis & Uninstall packages we don't need
-RUN apt-get update -qq > /dev/null 2>&1 && apt-get install -y -qq fonts-noto-color-emoji > /dev/null 2>&1 && \
-    apt-get -qq --purge remove -y kdeconnect partitionmanager xiterm+thai kaddressbook khelpcenter kmail kopete kwalletmanager korganizer okular sweeper dragonplayer juk pim-sieve-editor kwalletmanager gwenview imagemagick akregator konqueror plasma-discover gnome-shell gdm3 gnupg2 apt-utils cracklib-runtime > /dev/null 2>&1
+# Install superimportant emojis
+RUN apt-get update -qq > /dev/null 2>&1 && apt-get install -y -qq fonts-noto-color-emoji > /dev/null 2>&1
+
+# Uninstall packages we don't need
+RUN apt-get -qq --purge remove -y kdeconnect partitionmanager xiterm+thai kaddressbook khelpcenter kmail kopete kwalletmanager korganizer okular sweeper dragonplayer juk pim-sieve-editor kwalletmanager gwenview imagemagick akregator konqueror plasma-discover gnome-shell gdm3 gnupg2 apt-utils cracklib-runtime > /dev/null 2>&1
 
 # Prevent wallet / Key manager popups
 RUN rm -f /usr/share/dbus-1/services/org.kde.kwalletd5.service
@@ -78,10 +81,15 @@ COPY ./network/NetworkManager.conf /etc/NetworkManager/NetworkManager.conf
 # This seems to be necessary for the network manager to recognize the default connection properly
 RUN mkdir -p /etc/NetworkManager/conf.d/ && touch /etc/NetworkManager/conf.d/10-globally-managed-devices.conf
 
+# Configure init-zram-swapping
+COPY ./zram-config/init-zram-swapping /usr/bin/init-zram-swapping
+COPY ./zram-config/zram-config.service /lib/systemd/system/zram-config.service
+RUN chown root:root /usr/bin/init-zram-swapping && chmod 755 /usr/bin/init-zram-swapping && chown root:root /lib/systemd/system/zram-config.service && chmod 644 /lib/systemd/system/zram-config.service
+
 # This cleanup works, as we'll be copying the complete filesystem later, therefore omitting any files that would still exist in an underlying layer.
 # delete obsolete packages and any temporary state
-RUN apt-get -qq autoremove -y > /dev/null 2>&1 && apt-get -qq clean > /dev/null 2>&1  && \
-    rm -rf \
+RUN apt-get -qq autoremove -y > /dev/null 2>&1 && apt-get -qq clean > /dev/null 2>&1
+RUN rm -rf \
     /tmp/* \
     /boot/* \
     /var/backups/* \
