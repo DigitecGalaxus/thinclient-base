@@ -6,11 +6,11 @@ zramctl -f
 # All memory
 totalmem=`LC_ALL=C free | grep -e "^Mem:" | sed -e 's/^Mem: *//' -e 's/  *.*//'`
 
-# Calculate memory to use for zram (1/4 of ram)
-mem=$((totalmem / 4 * 1024))
+# Calculate memory to use for zram (1/2 of ram)
+mem=$((totalmem / 2 * 1024))
 
-# Calculate memory to use for home-zram (1/2 of ram)
-memhome=$((totalmem / 2 * 1024))
+# Calculate memory to use for home-zram (1/1 of ram)
+memhome=$((totalmem / 1 * 1024))
 
 # initialize swapping zram
 echo $mem > /sys/block/zram0/disksize
