@@ -85,6 +85,8 @@ RUN chown root:root /usr/bin/init-zram-swapping && chmod 755 /usr/bin/init-zram-
 
 # Enable systemd-resolved (instead of static resolv.conf-files)
 RUN systemctl enable systemd-resolved.service
+# Enable resolv.conf-stub
+RUN ln -sf /run/systemd/resolve/stub-resolv.conf /etc/resolv.conf
 
 # This cleanup works, as we'll be copying the complete filesystem later, therefore omitting any files that would still exist in an underlying layer.
 # delete obsolete packages and any temporary state
