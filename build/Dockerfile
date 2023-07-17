@@ -83,11 +83,6 @@ COPY ./zram-config/init-zram-swapping /usr/bin/init-zram-swapping
 COPY ./zram-config/zram-config.service /lib/systemd/system/zram-config.service
 RUN chown root:root /usr/bin/init-zram-swapping && chmod 755 /usr/bin/init-zram-swapping && chown root:root /lib/systemd/system/zram-config.service && chmod 644 /lib/systemd/system/zram-config.service
 
-# Enable systemd-resolved (instead of static resolv.conf-files)
-RUN systemctl enable systemd-resolved.service
-# Enable resolv.conf-stub
-RUN ln -sf /run/systemd/resolve/stub-resolv.conf /etc/resolv.conf
-
 # This cleanup works, as we'll be copying the complete filesystem later, therefore omitting any files that would still exist in an underlying layer.
 # delete obsolete packages and any temporary state
 RUN apt-get -qq autoremove -y > /dev/null 2>&1 && apt-get -qq clean > /dev/null 2>&1  && \
