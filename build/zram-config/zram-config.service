@@ -1,0 +1,12 @@
+[Unit]
+Description=Initializes zram swaping
+Before=systemd-oomd.service
+
+[Service]
+ExecStart=/usr/bin/init-zram-swapping
+ExecStop=/usr/bin/end-zram-swapping
+Type=oneshot
+RemainAfterExit=true
+
+[Install]
+WantedBy=local-fs.target
