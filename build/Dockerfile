@@ -79,9 +79,8 @@ COPY ./network/NetworkManager.conf /etc/NetworkManager/NetworkManager.conf
 RUN mkdir -p /etc/NetworkManager/conf.d/ && touch /etc/NetworkManager/conf.d/10-globally-managed-devices.conf
 
 # Configure init-zram-swapping
-COPY ./zram-config/init-zram-swapping /usr/bin/init-zram-swapping
-COPY ./zram-config/zram-config.service /lib/systemd/system/zram-config.service
-RUN chown root:root /usr/bin/init-zram-swapping && chmod 755 /usr/bin/init-zram-swapping && chown root:root /lib/systemd/system/zram-config.service && chmod 644 /lib/systemd/system/zram-config.service
+COPY --chown=root:root --chmod=755 ./zram-config/init-zram-swapping /usr/bin/init-zram-swapping
+COPY --chown=root:root --chmod=644 ./zram-config/zram-config.service /lib/systemd/system/zram-config.service
 
 # This cleanup works, as we'll be copying the complete filesystem later, therefore omitting any files that would still exist in an underlying layer.
 # delete obsolete packages and any temporary state
