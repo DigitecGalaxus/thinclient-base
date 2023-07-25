@@ -10,7 +10,7 @@ variables:
 - name: usecache
   value: false
 - name: netbootIP
-  value: 10.1.30.4
+  value: 172.28.44.190
 - name: netbootUsername
   value: master
 - name: folderToPromoteTo

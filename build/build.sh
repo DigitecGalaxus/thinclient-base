@@ -47,7 +47,7 @@ if [[ "$cachingServerUsername" == "" ]]; then
     echo "Warning: No cachingServerUsername passed. Using $cachingServerUsername as cachingServerUsername"
 fi
 if [[ "$cachingServerIP" == "" ]]; then
-    cachingServerIP="172.28.32.7"
+    cachingServerIP="172.28.44.190"
     echo "Warning: No cachingServerIP passed. Using $cachingServerIP as cachingServerIP"
 fi
 if [[ "$cachingServerPrivateKeyAbsolutePath" == "" ]]; then
