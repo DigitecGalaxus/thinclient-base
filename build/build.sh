@@ -20,7 +20,7 @@ done
 
 # This argument is required to read the latest kernel version from the netboot server
 if [[ "$netbootIP" == "" ]]; then
-    echo "Error: No arguments passed. Make sure to pass at least the Netboot IP Address, e.g. netbootIP=10.1.30.4"
+    echo "Error: No arguments passed. Make sure to pass at least the Netboot IP Address, e.g. netbootIP=172.28.44.190"
     exit 1
 fi
 if [[ "$branchName" == "" ]]; then
@@ -51,7 +51,7 @@ if [[ "$cachingServerIP" == "" ]]; then
     echo "Warning: No cachingServerIP passed. Using $cachingServerIP as cachingServerIP"
 fi
 if [[ "$cachingServerPrivateKeyAbsolutePath" == "" ]]; then
-    cachingServerPrivateKeyAbsolutePath="$(pwd)/caching-server-key.pem"
+    cachingServerPrivateKeyAbsolutePath="$(pwd)/netboot-server-new-arch.pem"
     echo "Warning: No cachingServerPrivateKeyAbsolutePath passed. Using $cachingServerPrivateKeyAbsolutePath as cachingServerPrivateKeyAbsolutePath"
 fi
 
