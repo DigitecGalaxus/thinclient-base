@@ -3,19 +3,6 @@ set -eu -o pipefail
 
 # This script checks if there is a newer kernel available upstream at the public netbootxyz repository. If it is, it downloads it to our netboot server into the kernels folder. It creates a json file which describes the kernel version of the just-downloaded kernel for later comparison. If there was a new kernel, attempt to fetch an initrd from upstream as well.
 
-# Returns whether the kernel version passed is newer than the one we currently have on the netboot server
-function isKernelNewer {
-    version="$1"
-    local netbootIP="$2"
-    latestVersionOnNetbootServer=$(curl "http://$netbootIP/kernels/latest-kernel-version.json" | jq -r .version)
-    if [[ "$version" != "$latestVersionOnNetbootServer" ]]; then
-        # Assume it's newer, if it is different. Probably fine for this usecase.
-        echo true
-        return
-    fi
-    echo false
-}
-
 # Returns whether the kernel version passed is newer than the one we currently have on the blob storage
 # 0 = true, 1 = false
 function isKernelNewerThanOnBlobStorage {
@@ -57,22 +44,14 @@ function copyToBlob {
     rm -f "$(pwd)/$filename"
 }
 
-if [[ $# -lt 3 ]]; then
-    echo "Error: Less than 3 arguments passed to this script."
+if [[ $# -lt 1 ]]; then
+    echo "Error: Less than 1 arguments passed to this script."
     exit 1
 fi
 
-# The path to the private key for the netboot server
-pemFilePath="$1"
-# The netboot IP address
-netbootIP="$2"
-# The username to ssh to the netboot server
-netbootUsername="$3"
-# armSasToken is optional
-set +u
 # The SAS token to access the blob storage
 armSasToken="$4"
-set -u
+
 
 imageBlobURL="https://thinclientsimgstore.blob.core.windows.net"
 dockerImageName="anymodconrst001dg.azurecr.io/planetexpress/squashfs-tools:latest"
@@ -102,27 +81,10 @@ declare -A file_map
 file_map["vmlinuz"]="kernels/$kernelVersion"
 file_map["initrd"]="kernels/$kernelVersion"
 file_map["latest-kernel-version.json"]="kernels"
-kernelIsNew=$(isKernelNewer "$kernelVersion" "$netbootIP")
-if $kernelIsNew; then
-    echo '{ "version": "'"$kernelVersion"'" }' >latest-kernel-version.json
-    assetsPath="/home/$netbootUsername/netboot/assets/"
-    ssh -i "$pemFilePath" -o "StrictHostKeyChecking=no" "$netbootUsername@$netbootIP" mkdir -p "$assetsPath/kernels/$kernelVersion"
-    # Download initrd
-    curl -L -o initrd "https://github.com/netbootxyz${yamlendpoints_ubuntu_23_04_KDE_squash_path}initrd"
-    # create map from filename to target folder
-
-    for file in "${!file_map[@]}"; do
-        destinationFolder="${file_map[$file]}"
-        # Upload kernel into the kernel folder on the netboot server
-        scp -i "$pemFilePath" -o "StrictHostKeyChecking=no" "$file" "$netbootUsername@$netbootIP:$assetsPath/$destinationFolder/$file"
-    done
-else
-    echo "Kernel is already up-to-date"
-fi
 
 if [[ "$armSasToken" == "" ]]; then
     echo "No SAS token passed. Skipping upload to blob storage."
-    exit 0
+    exit 1
 fi
 
 set -x
