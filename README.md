@@ -32,6 +32,10 @@ Note: In the terminal you will see periodically, when the system is going to reb
 
 This is an experimental feature. The scrolling with the scroll wheel is not working on all devices. This scripts checks all pointer devices and enables scrolling with the wheel.
 
+### Promotions / Build
+
+In this release, no squashFS is exported. The build generates a docker image that can be converted to a squashFS with the right [tools](https://github.com/DigitecGalaxus/squashfs-tools/). You then cane copy the squashFS to the netboot server.
+
 ## Contribute
 
 No matter how small, we value every contribution! If you wish to contribute,
