@@ -50,7 +50,7 @@ if [[ $# -lt 1 ]]; then
 fi
 
 # The SAS token to access the blob storage
-armSasToken="$4"
+armSasToken="$1"
 
 
 imageBlobURL="https://thinclientsimgstore.blob.core.windows.net"
