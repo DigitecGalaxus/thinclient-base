@@ -54,7 +54,7 @@ armSasToken="$1"
 
 
 imageBlobURL="https://thinclientsimgstore.blob.core.windows.net"
-dockerImageName="anymodconrst001dg.azurecr.io/planetexpress/squashfs-tools:latest"
+dockerImageName="dgpublicimagesprod.azurecr.io/planetexpress/squashfs-tools:latest"
 
 # Get most recent endpoints.yml to parse locations of latest kernels and initRDs.
 latestRelease=$(curl -sL "https://api.github.com/repos/netbootxyz/netboot.xyz/releases/latest" | jq -r '.tag_name')

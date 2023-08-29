@@ -11,10 +11,6 @@ variables:
   value: false
 - name: netbootIP
   value: 10.1.30.7
-- name: netbootUsername
-  value: master
-- name: folderToPromoteTo
-  value: dev
 
 stages:
   - stage: Build
