@@ -23,6 +23,14 @@ if [[ "$netbootIP" == "" ]]; then
     echo "Error: No arguments passed. Make sure to pass at least the Netboot IP Address, e.g. netbootIP=10.1.30.7"
     exit 1
 fi
+if [[ "$netbootUsername" == "" ]]; then
+    netbootUsername="master"
+    echo "Warning: No netbootUsername passed. Using $netbootUsername as netbootUsername"
+fi
+if [[ "$netbootSSHPrivateKey" == "" ]]; then
+    netbootSSHPrivateKey="$(pwd)/netboot-server-new-arch.pem"
+    echo "Warning: No netbootSSHPrivateKey passed. Using $netbootSSHPrivateKey as netbootSSHPrivateKey"
+fi
 if [[ "$branchName" == "" ]]; then
     # To be consistent with the naming of the azure devops variable Build.SourceBranchName, we remove the prefixes containing slashes
     branchName=$(git symbolic-ref -q --short HEAD | rev | cut -d'/' --fields=1 | rev)
@@ -42,23 +50,14 @@ if [[ "$buildSquashfsAndPromote" == "" ]]; then
     buildSquashfsAndPromote="false"
     echo "Warning: No buildSquashfsAndPromote passed. Using $buildSquashfsAndPromote as buildSquashfsAndPromote"
 fi
-if [[ "$cachingServerUsername" == "" ]]; then
-    cachingServerUsername="master"
-    echo "Warning: No cachingServerUsername passed. Using $cachingServerUsername as cachingServerUsername"
-fi
-if [[ "$cachingServerIP" == "" ]]; then
-    cachingServerIP="172.28.44.190"
-    echo "Warning: No cachingServerIP passed. Using $cachingServerIP as cachingServerIP"
-fi
-if [[ "$cachingServerPrivateKeyAbsolutePath" == "" ]]; then
-    cachingServerPrivateKeyAbsolutePath="$(pwd)/netboot-server-new-arch.pem"
-    echo "Warning: No cachingServerPrivateKeyAbsolutePath passed. Using $cachingServerPrivateKeyAbsolutePath as cachingServerPrivateKeyAbsolutePath"
-fi
-
 if [[ "$useDockerBuildCache" == "true" || "$useDockerBuildCache" == "True" ]]; then
     dockerBuildCacheArgument=""
 else
     dockerBuildCacheArgument="--no-cache --pull"
+fi
+if [["$folderToPromoteTo" == "" ]]; then
+    folderToPromoteTo="dev"
+    echo "Warning: No folderToPromoteTo passed. Using $folderToPromoteTo as folderToPromoteTo"
 fi
 
 # Setting this intentionally after the argument parsing for the shell script
@@ -95,15 +94,15 @@ touch "$squashfsFilename"
 squashfsContainerID=$(docker run -d -u $(id -u) \
     -v "$(pwd)/$tarFileName:/var/live/$tarFileName" \
     -v "$(pwd)/$squashfsFilename:/var/live/newfilesystem.squashfs" \
-    anymodconrst001dg.azurecr.io/planetexpress/squashfs-tools:latest /bin/sh -c "tar2sqfs --force --quiet newfilesystem.squashfs < /var/live/$tarFileName")
+    dgpublicimagesprod.azurecr.io/planetexpress/squashfs-tools:latest /bin/sh -c "tar2sqfs --force --quiet newfilesystem.squashfs < /var/live/$tarFileName")
 docker wait "$squashfsContainerID"
 docker rm -f "$squashfsContainerID"
 rm -f "$(pwd)/$tarFileName"
 
 squashfsAbsolutePath="$(pwd)/$squashfsFilename"
 
-# If you want to promote the image directly to the caching server, run ./build.sh buildSquashfsAndPromote="true"
+# If you want to promote the image directly to the caching server on dev or prod, run ./build.sh buildSquashfsAndPromote="true" folderToPromoteTo="dev"
 echo "uploading image to caching server"
 kernelFilename="${squashfsFilename%.*}-kernel.json"
-ssh -i "$cachingServerPrivateKeyAbsolutePath" -o StrictHostKeyChecking=no "$cachingServerUsername@$cachingServerIP" cp "/home/$cachingServerUsername/netboot/assets/kernels/latest-kernel-version.json" "/home/$cachingServerUsername/netboot/assets/dev/$kernelFilename"
-scp -i "$cachingServerPrivateKeyAbsolutePath" -o StrictHostKeyChecking=no "$squashfsAbsolutePath" "$cachingServerUsername@$cachingServerIP:/home/$cachingServerUsername/netboot/assets/dev/$squashfsFilename"
+scp -i "$netbootSSHPrivateKey" -o StrictHostKeyChecking=no "/home/$netbootUser/netboot/assets/kernels/latest-kernel-version.json" "$netbootUser@$netbootIP:/home/$netbootUser/netboot/assets/$folderToPromoteTo/$kernelFilename"
+scp -i "$netbootSSHPrivateKey" -o StrictHostKeyChecking=no "$squashfsAbsolutePath" "$netbootUser@$netbootIP:/home/$netbootUser/netboot/assets/$folderToPromoteTo/$squashfsFilename"
