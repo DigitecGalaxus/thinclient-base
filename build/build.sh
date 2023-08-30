@@ -101,7 +101,7 @@ rm -f "$(pwd)/$tarFileName"
 
 squashfsAbsolutePath="$(pwd)/$squashfsFilename"
 
-# If you want to promote the image directly to the caching server on dev or prod, run ./build.sh buildSquashfsAndPromote="true" promoteEnv="dev"
+# If you want to promote the image directly to the caching server on dev or prod, run ./build.sh buildSquashfsAndPromote="true" folderToPromoteTo="dev"
 echo "uploading image to caching server"
 kernelFilename="${squashfsFilename%.*}-kernel.json"
 scp -i "$netbootSSHPrivateKey" -o StrictHostKeyChecking=no "/home/$netbootUser/netboot/assets/kernels/latest-kernel-version.json" "$netbootUser@$netbootIP:/home/$netbootUser/netboot/assets/$folderToPromoteTo/$kernelFilename"
