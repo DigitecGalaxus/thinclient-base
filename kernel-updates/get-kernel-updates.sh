@@ -57,7 +57,8 @@ imageBlobURL="https://thinclientsimgstore.blob.core.windows.net"
 dockerImageName="dgpublicimagesprod.azurecr.io/planetexpress/squashfs-tools:latest"
 
 # Get most recent endpoints.yml to parse locations of latest kernels and initRDs.
-latestRelease=$(curl -sL "https://api.github.com/repos/netbootxyz/netboot.xyz/releases/latest" | jq -r '.tag_name')
+# latestRelease=$(curl -sL "https://api.github.com/repos/netbootxyz/netboot.xyz/releases/latest" | jq -r '.tag_name')
+latestRelease="2.0.76" # hardcoding this value as the latest release 2.0.77 does not include ubuntu-23.04-kde anymore
 # Remove potential previous endpoints.yml
 if [[ -f "./endpoints.yml" ]]; then
     rm -f ./endpoints.yml
