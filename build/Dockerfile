@@ -9,14 +9,12 @@ RUN yes | unminimize > /dev/null 2>&1
 
 COPY ./apt/sources.list /etc/apt/sources.list
 
+# Hardcode DNS resolution
+COPY ./network/resolv.conf /etc/resolv.conf
+
 # curl and jq are prerequisites for the install-kernel-package.sh script
 RUN apt-get update -qq > /dev/null 2>&1 && apt-get -qq -y full-upgrade > /dev/null 2>&1 && apt-get install -y -qq jq curl > /dev/null 2>&1
 RUN apt-get -qq update > /dev/null 2>&1 && apt-get -qq install -y linux-image-generic > /dev/null 2>&1
-
-# # Used to determine the latest kernel version in the script
-# ARG NETBOOT_IP
-# COPY kernel/install-kernel-packages.sh install-kernel-packages.sh
-# RUN ./install-kernel-packages.sh $NETBOOT_IP
 
 # Install bluetooth drivers for some devices only. The linux-firmware package is huge, so we only take some files we know we need.
 # At the moment, the only bluetooth business requirement is the warehouse Odilia, where ProGloves are connected directly via Bluetooth instead of the USB-Dock. In Odilia, we therefore use only Intel NUCs, which need the "ibt-19-0-4*" files and the "Captiva Power Starter I73-688", which need the ibt-0041-0041* files.
@@ -88,7 +86,6 @@ COPY --chown=root:root --chmod=644 ./zram-config/zram-config.service /lib/system
 RUN apt-get -qq autoremove -y > /dev/null 2>&1 && apt-get -qq clean > /dev/null 2>&1  && \
     rm -rf \
     /tmp/* \
-    # /boot/* \
     /var/backups/* \
     /var/log/* \
     /var/run/* \
