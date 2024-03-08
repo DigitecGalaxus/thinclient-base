@@ -55,7 +55,7 @@ if [[ "$useDockerBuildCache" == "true" || "$useDockerBuildCache" == "True" ]]; t
 else
     dockerBuildCacheArgument="--no-cache --pull"
 fi
-if [["$folderToPromoteTo" == "" ]]; then
+if [[ "$folderToPromoteTo" == "" ]]; then
     folderToPromoteTo="dev"
     echo "Warning: No folderToPromoteTo passed. Using $folderToPromoteTo as folderToPromoteTo"
 fi
@@ -71,6 +71,14 @@ squashfsFilename="$(date +%y-%m-%d)-$branchName-$gitCommitShortSha-base.squashfs
 
 # --no-cache is useful to apply the latest updates within an apt-get full-upgrade
 docker image build --build-arg OS_RELEASE=${squashfsFilename%.*} --build-arg NETBOOT_IP=$netbootIP $dockerBuildCacheArgument -t "$imageName" .
+
+echo "Exporting vmlinuz and initrd"
+# This needs to be a docker container run to also copy container runtime info such as /etc/resolv.conf
+containerID=$(docker run -d "$imageName" tail -f /dev/null)
+# export Kernel and initrd
+docker cp -L "$containerID:/boot/initrd.img" - >"initrd.tar"
+docker cp -L "$containerID:/boot/vmlinuz" - >"vmlinuz.tar"
+docker rm -f "$containerID"
 
 # If you want to promote the image directly to the caching server, run ./build.sh buildSquashfsAndPromote="true"
 if [[ "$buildSquashfsAndPromote" != "true" ]]; then
@@ -100,9 +108,12 @@ docker rm -f "$squashfsContainerID"
 rm -f "$(pwd)/$tarFileName"
 
 squashfsAbsolutePath="$(pwd)/$squashfsFilename"
+vmlinuzAbsolutePath="$(pwd)/vmlinuz"
+initrdAbsolutePath="$(pwd)/initrd"
 
 # If you want to promote the image directly to the caching server on dev or prod, run ./build.sh buildSquashfsAndPromote="true" folderToPromoteTo="dev"
-echo "uploading image to caching server"
-kernelFilename="${squashfsFilename%.*}-kernel.json"
-scp -i "$netbootSSHPrivateKey" -o StrictHostKeyChecking=no "/home/$netbootUser/netboot/assets/kernels/latest-kernel-version.json" "$netbootUser@$netbootIP:/home/$netbootUser/netboot/assets/$folderToPromoteTo/$kernelFilename"
-scp -i "$netbootSSHPrivateKey" -o StrictHostKeyChecking=no "$squashfsAbsolutePath" "$netbootUser@$netbootIP:/home/$netbootUser/netboot/assets/$folderToPromoteTo/$squashfsFilename"
+echo "Uploading artifacts to caching server..."
+ssh -i "$netbootSSHPrivateKey" "$netbootUsername@$netbootIP" "mkdir -p /home/$netbootUsername/netboot/assets/$folderToPromoteTo/\`date +%Y%m%d\`/"
+scp -i "$netbootSSHPrivateKey" -o StrictHostKeyChecking=no "$squashfsAbsolutePath" "$netbootUsername@$netbootIP:/home/$netbootUsername/netboot/assets/$folderToPromoteTo/$(date +%Y%m%d)/$squashfsFilename"
+scp -i "$netbootSSHPrivateKey" -o StrictHostKeyChecking=no "$initrdAbsolutePath" "$netbootUsername@$netbootIP:/home/$netbootUsername/netboot/assets/$folderToPromoteTo/$(date +%Y%m%d)/initrd"
+scp -i "$netbootSSHPrivateKey" -o StrictHostKeyChecking=no "$vmlinuzAbsolutePath" "$netbootUsername@$netbootIP:/home/$netbootUsername/netboot/assets/$folderToPromoteTo/$(date +%Y%m%d)/vmlinuz"
