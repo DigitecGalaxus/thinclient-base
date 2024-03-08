@@ -108,7 +108,9 @@ docker rm -f "$squashfsContainerID"
 rm -f "$(pwd)/$tarFileName"
 
 squashfsAbsolutePath="$(pwd)/$squashfsFilename"
+tar -xvf $(pwd)/vmlinuz.tar && rm -r $(pwd)/vmlinuz.tar && mv $(pwd)/vmlinuz-* $(pwd)/vmlinuz
 vmlinuzAbsolutePath="$(pwd)/vmlinuz"
+tar -xvf $(pwd)/initrd.tar && rm -r $(pwd)/initrd.tar && mv $(pwd)/initrd.img-* $(pwd)/initrd
 initrdAbsolutePath="$(pwd)/initrd"
 
 # If you want to promote the image directly to the caching server on dev or prod, run ./build.sh buildSquashfsAndPromote="true" folderToPromoteTo="dev"
