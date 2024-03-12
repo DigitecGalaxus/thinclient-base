@@ -70,7 +70,11 @@ echo "##vso[task.setvariable variable=branchName;isOutput=true]$branchName"
 squashfsFilename="$(date +%y-%m-%d)-$branchName-$gitCommitShortSha-base.squashfs"
 
 # --no-cache is useful to apply the latest updates within an apt-get full-upgrade
-docker image build --progress=plain --build-arg OS_RELEASE=${squashfsFilename%.*} --build-arg NETBOOT_IP=$netbootIP $dockerBuildCacheArgument -t "$imageName" .
+docker image build --build-arg OS_RELEASE=${squashfsFilename%.*} --build-arg NETBOOT_IP=$netbootIP $dockerBuildCacheArgument -t "$imageName" .
+
+# Build bootartifacts
+DOCKER_BUILDKIT=1 docker image build --build-arg IMAGE_BASE=$imageName --file bootartifacts.Dockerfile --output bootartifacts .
+
 
 # If you want to promote the image directly to the caching server, run ./build.sh buildSquashfsAndPromote="true"
 if [[ "$buildSquashfsAndPromote" != "true" ]]; then
@@ -85,8 +89,8 @@ echo "Starting to tar container filesystem - this will take a while..."
 # This needs to be a docker container run to also copy container runtime info such as /etc/resolv.conf
 containerID=$(docker run -d "$imageName" tail -f /dev/null)
 # export Kernel and initrd
-docker cp -L "$containerID:/boot/initrd.img" - >"initrd.tar"
-docker cp -L "$containerID:/boot/vmlinuz" - >"vmlinuz.tar"
+docker cp -L "$containerID:/boot/initrd.img" - >"initrd.tar" && tar -xvf $(pwd)/vmlinuz.tar && rm -r $(pwd)/vmlinuz.tar && mv $(pwd)/vmlinuz-* $(pwd)/vmlinuz
+docker cp -L "$containerID:/boot/vmlinuz" - >"vmlinuz.tar" && tar -xvf $(pwd)/initrd.tar && rm -r $(pwd)/initrd.tar && mv $(pwd)/initrd.img-* $(pwd)/initrd
 # export rootfs
 docker cp "$containerID:/" - >"$tarFileName"
 docker rm -f "$containerID"
@@ -104,9 +108,7 @@ docker rm -f "$squashfsContainerID"
 rm -f "$(pwd)/$tarFileName"
 
 squashfsAbsolutePath="$(pwd)/$squashfsFilename"
-tar -xvf $(pwd)/vmlinuz.tar && rm -r $(pwd)/vmlinuz.tar && mv $(pwd)/vmlinuz-* $(pwd)/vmlinuz
 vmlinuzAbsolutePath="$(pwd)/vmlinuz"
-tar -xvf $(pwd)/initrd.tar && rm -r $(pwd)/initrd.tar && mv $(pwd)/initrd.img-* $(pwd)/initrd
 initrdAbsolutePath="$(pwd)/initrd"
 
 # If you want to promote the image directly to the caching server on dev or prod, run ./build.sh buildSquashfsAndPromote="true" folderToPromoteTo="dev"
