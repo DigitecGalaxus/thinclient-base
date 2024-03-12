@@ -10,12 +10,12 @@ RUN yes | unminimize > /dev/null 2>&1
 COPY ./apt/sources.list /etc/apt/sources.list
 
 # curl and jq are prerequisites for the install-kernel-package.sh script
-RUN apt-get update -qq > /dev/null 2>&1 && apt-get -qq -y full-upgrade > /dev/null 2>&1 && apt-get install -y -qq jq curl linux-image-generic > /dev/null 2>&1
+RUN apt-get update -qq > /dev/null 2>&1 && apt-get -qq -y full-upgrade > /dev/null 2>&1 && apt-get install -y -qq jq curl linux-image-generic
 
 # Used to determine the latest kernel version in the script
-ARG NETBOOT_IP
-COPY kernel/install-kernel-packages.sh install-kernel-packages.sh
-RUN ./install-kernel-packages.sh $NETBOOT_IP
+#ARG NETBOOT_IP
+#COPY kernel/install-kernel-packages.sh install-kernel-packages.sh
+#RUN ./install-kernel-packages.sh $NETBOOT_IP
 
 # Install bluetooth drivers for some devices only. The linux-firmware package is huge, so we only take some files we know we need.
 # At the moment, the only bluetooth business requirement is the warehouse Odilia, where ProGloves are connected directly via Bluetooth instead of the USB-Dock. In Odilia, we therefore use only Intel NUCs, which need the "ibt-19-0-4*" files and the "Captiva Power Starter I73-688", which need the ibt-0041-0041* files.
@@ -81,6 +81,28 @@ RUN mkdir -p /etc/NetworkManager/conf.d/ && touch /etc/NetworkManager/conf.d/10-
 # Configure init-zram-swapping
 COPY --chown=root:root --chmod=755 ./zram-config/init-zram-swapping /usr/bin/init-zram-swapping
 COPY --chown=root:root --chmod=644 ./zram-config/zram-config.service /lib/systemd/system/zram-config.service
+
+# environment settings
+ARG DEBIAN_FRONTEND="noninteractive"
+ENV XDG_CONFIG_HOME="/config/xdg"
+
+# add files
+COPY /initrd-patch /
+RUN chmod +x /curl-hook && cp /curl-hook /usr/share/initramfs-tools/hooks/
+
+RUN \
+ echo "**** install deps ****" && \
+ apt-get update && \
+ apt-get install -y \
+	casper \
+	patch \
+    busybox-initramfs \
+	rsync && \
+ echo "**** patch casper ****" && \
+ patch /usr/share/initramfs-tools/scripts/casper < /patch && \
+ patch /usr/share/initramfs-tools/scripts/casper-bottom/24preseed < /preseed-patch
+
+RUN update-initramfs -u
 
 # This cleanup works, as we'll be copying the complete filesystem later, therefore omitting any files that would still exist in an underlying layer.
 # delete obsolete packages and any temporary state
