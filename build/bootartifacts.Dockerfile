@@ -23,8 +23,6 @@ RUN \
 
 RUN update-initramfs -u
 
-RUN ls -la /boot/
-
 FROM scratch as export-stage
 COPY --from=bootartifactbuilder /boot/initrd.img .
 COPY --from=bootartifactbuilder /boot/vmlinuz .

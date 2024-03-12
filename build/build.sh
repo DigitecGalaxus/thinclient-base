@@ -87,7 +87,6 @@ removeFileIfExists "$tarFileName"
 echo "Starting to tar container filesystem - this will take a while..."
 # This needs to be a docker container run to also copy container runtime info such as /etc/resolv.conf
 containerID=$(docker run -d "$imageName" tail -f /dev/null)
-# export rootfs
 docker cp "$containerID:/" - >"$tarFileName"
 docker rm -f "$containerID"
 
