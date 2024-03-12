@@ -70,10 +70,10 @@ echo "##vso[task.setvariable variable=branchName;isOutput=true]$branchName"
 squashfsFilename="base.squashfs"
 
 # --no-cache is useful to apply the latest updates within an apt-get full-upgrade
-docker image build --progress=plain --build-arg OS_RELEASE=${squashfsFilename%.*} --build-arg NETBOOT_IP=$netbootIP $dockerBuildCacheArgument -t "$imageName" .
+docker image build --build-arg OS_RELEASE=${squashfsFilename%.*} --build-arg NETBOOT_IP=$netbootIP $dockerBuildCacheArgument -t "$imageName" .
 
-# Build bootartifacts
-DOCKER_BUILDKIT=1 docker image build --progress=plain --build-arg IMAGE_BASE=$imageName --file bootartifacts.Dockerfile --output ./ .
+# Build bootartifacts and exporting them directly
+DOCKER_BUILDKIT=1 docker image build --build-arg IMAGE_BASE=$imageName --file bootartifacts.Dockerfile --output ./ .
 
 # If you want to promote the image directly to the caching server, run ./build.sh buildSquashfsAndPromote="true"
 if [[ "$buildSquashfsAndPromote" != "true" ]]; then
@@ -87,7 +87,6 @@ removeFileIfExists "$tarFileName"
 echo "Starting to tar container filesystem - this will take a while..."
 # This needs to be a docker container run to also copy container runtime info such as /etc/resolv.conf
 containerID=$(docker run -d "$imageName" tail -f /dev/null)
-mv $(pwd)/initrd.img $(pwd)/initrd
 # export rootfs
 docker cp "$containerID:/" - >"$tarFileName"
 docker rm -f "$containerID"
@@ -106,7 +105,7 @@ rm -f "$(pwd)/$tarFileName"
 
 squashfsAbsolutePath="$(pwd)/$squashfsFilename"
 vmlinuzAbsolutePath="$(pwd)/vmlinuz"
-initrdAbsolutePath="$(pwd)/initrd"
+initrdAbsolutePath="$(pwd)/initrd.img"
 
 # If you want to promote the image directly to the caching server on dev or prod, run ./build.sh buildSquashfsAndPromote="true" folderToPromoteTo="dev"
 echo "Uploading image to caching server..."
