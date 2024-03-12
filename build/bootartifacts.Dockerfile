@@ -5,9 +5,6 @@ FROM ${IMAGE_BASE} as bootartifactbuilder
 # Set environment variables so apt installs packages non-interactively
 ENV DEBIAN_FRONTEND=noninteractive DEBIAN_PRIORITY=critical
 
-# curl and jq are prerequisites for the install-kernel-package.sh script
-RUN apt-get update -qq > /dev/null 2>&1 && apt-get -qq -y full-upgrade > /dev/null 2>&1 && apt-get install -y -qq linux-image-generic > /dev/null 2>&1
-
 # add files
 COPY /initrd-patch /
 RUN chmod +x /curl-hook && cp /curl-hook /usr/share/initramfs-tools/hooks/
@@ -25,6 +22,8 @@ RUN \
  patch /usr/share/initramfs-tools/scripts/casper-bottom/24preseed < /preseed-patch
 
 RUN update-initramfs -u
+
+RUN ls -la /boot/
 
 FROM scratch as export-stage
 COPY --from=bootartifactbuilder /boot/initrd.img .

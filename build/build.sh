@@ -67,14 +67,13 @@ imageName="anymodconrst001dg.azurecr.io/planetexpress/thinclient-base:$branchNam
 echo "##vso[task.setvariable variable=branchName;isOutput=true]$branchName"
 
 # Name of the resulting squashfs file, e.g. 21-01-17-master-6d358edc.squashfs
-squashfsFilename="$(date +%y-%m-%d)-$branchName-$gitCommitShortSha-base.squashfs"
+squashfsFilename="base.squashfs"
 
 # --no-cache is useful to apply the latest updates within an apt-get full-upgrade
-docker image build --build-arg OS_RELEASE=${squashfsFilename%.*} --build-arg NETBOOT_IP=$netbootIP $dockerBuildCacheArgument -t "$imageName" .
+docker image build --progress=plain --build-arg OS_RELEASE=${squashfsFilename%.*} --build-arg NETBOOT_IP=$netbootIP $dockerBuildCacheArgument -t "$imageName" .
 
 # Build bootartifacts
-DOCKER_BUILDKIT=1 docker image build --build-arg IMAGE_BASE=$imageName --file bootartifacts.Dockerfile --output bootartifacts .
-
+DOCKER_BUILDKIT=1 docker image build --progress=plain --build-arg IMAGE_BASE=$imageName --file bootartifacts.Dockerfile --output ./ .
 
 # If you want to promote the image directly to the caching server, run ./build.sh buildSquashfsAndPromote="true"
 if [[ "$buildSquashfsAndPromote" != "true" ]]; then
@@ -88,9 +87,7 @@ removeFileIfExists "$tarFileName"
 echo "Starting to tar container filesystem - this will take a while..."
 # This needs to be a docker container run to also copy container runtime info such as /etc/resolv.conf
 containerID=$(docker run -d "$imageName" tail -f /dev/null)
-# export Kernel and initrd
-docker cp -L "$containerID:/boot/initrd.img" - >"initrd.tar" && tar -xvf $(pwd)/vmlinuz.tar && rm -r $(pwd)/vmlinuz.tar && mv $(pwd)/vmlinuz-* $(pwd)/vmlinuz
-docker cp -L "$containerID:/boot/vmlinuz" - >"vmlinuz.tar" && tar -xvf $(pwd)/initrd.tar && rm -r $(pwd)/initrd.tar && mv $(pwd)/initrd.img-* $(pwd)/initrd
+mv $(pwd)/initrd.img $(pwd)/initrd
 # export rootfs
 docker cp "$containerID:/" - >"$tarFileName"
 docker rm -f "$containerID"
@@ -112,16 +109,8 @@ vmlinuzAbsolutePath="$(pwd)/vmlinuz"
 initrdAbsolutePath="$(pwd)/initrd"
 
 # If you want to promote the image directly to the caching server on dev or prod, run ./build.sh buildSquashfsAndPromote="true" folderToPromoteTo="dev"
-echo "uploading image to caching server"
-kernelFilename="${squashfsFilename%.*}-kernel.json"
-scp -i "$netbootSSHPrivateKey" -o StrictHostKeyChecking=no "$netbootUsername@$netbootIP:/home/$netbootUsername/netboot/assets/kernels/latest-kernel-version.json" "$netbootUsername@$netbootIP:/home/$netbootUsername/netboot/assets/$folderToPromoteTo/$kernelFilename"
-#scp -i "$netbootSSHPrivateKey" -o StrictHostKeyChecking=no "$squashfsAbsolutePath" "$netbootUsername@$netbootIP:/home/$netbootUsername/netboot/assets/$folderToPromoteTo/$squashfsFilename"
-echo "uploading image to caching server in new folder structure"
-ssh -i "$netbootSSHPrivateKey" -o StrictHostKeyChecking=no "$netbootUsername@$netbootIP" "mkdir -p /home/$netbootUsername/netboot/assets/$folderToPromoteTo/\`date +%Y%m%d\`-$gitCommitShortSha/"
-# Symlinking instead of reuploading; you know - to safe some storage.
-ssh -i "$netbootSSHPrivateKey" -o StrictHostKeyChecking=no "$netbootUsername@$netbootIP" "ln -f /home/$netbootUsername/netboot/assets/$folderToPromoteTo/$squashfsFilename /home/$netbootUsername/netboot/assets/$folderToPromoteTo/$(date +%Y%m%d)-$gitCommitShortSha/$squashfsFilename"
-
-# Uncomment the following line to skip the symlink and upload the file to the proper target folder.
-#scp -i "$netbootSSHPrivateKey" -o StrictHostKeyChecking=no "$squashfsAbsolutePath" "$netbootUsername@$netbootIP:/home/$netbootUsername/netboot/assets/$folderToPromoteTo/$(date +%Y%m%d)-$gitCommitShortSha/$squashfsFilename"
-scp -i "$netbootSSHPrivateKey" -o StrictHostKeyChecking=no "$initrdAbsolutePath" "$netbootUsername@$netbootIP:/home/$netbootUsername/netboot/assets/$folderToPromoteTo/$(date +%Y%m%d)-$gitCommitShortSha/initrd"
-scp -i "$netbootSSHPrivateKey" -o StrictHostKeyChecking=no "$vmlinuzAbsolutePath" "$netbootUsername@$netbootIP:/home/$netbootUsername/netboot/assets/$folderToPromoteTo/$(date +%Y%m%d)-$gitCommitShortSha/vmlinuz"
+echo "Uploading image to caching server..."
+ssh -i "$netbootSSHPrivateKey" -o StrictHostKeyChecking=no "$netbootUsername@$netbootIP" "mkdir -p /home/$netbootUsername/netboot/assets/$folderToPromoteTo/$(date +%y-%m-%d)-$branchName-$gitCommitShortSha/"
+scp -i "$netbootSSHPrivateKey" -o StrictHostKeyChecking=no "$squashfsAbsolutePath" "$netbootUsername@$netbootIP:/home/$netbootUsername/netboot/assets/$folderToPromoteTo/$(date +%y-%m-%d)-$branchName-$gitCommitShortSha/$squashfsFilename"
+scp -i "$netbootSSHPrivateKey" -o StrictHostKeyChecking=no "$initrdAbsolutePath" "$netbootUsername@$netbootIP:/home/$netbootUsername/netboot/assets/$folderToPromoteTo/$(date +%y-%m-%d)-$branchName-$gitCommitShortSha/initrd"
+scp -i "$netbootSSHPrivateKey" -o StrictHostKeyChecking=no "$vmlinuzAbsolutePath" "$netbootUsername@$netbootIP:/home/$netbootUsername/netboot/assets/$folderToPromoteTo/$(date +%y-%m-%d)-$branchName-$gitCommitShortSha/vmlinuz"

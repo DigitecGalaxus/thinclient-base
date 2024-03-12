@@ -7,16 +7,9 @@ ENV DEBIAN_FRONTEND=noninteractive DEBIAN_PRIORITY=critical
 # Unminimize is needed such that the languages work properly within KDE. Doing this early is faster.
 RUN yes | unminimize > /dev/null 2>&1
 
-COPY ./apt/sources.list /etc/apt/sources.list
-
 # curl and jq are prerequisites for the install-kernel-package.sh script
 RUN apt-get update -qq > /dev/null 2>&1 && apt-get -qq -y full-upgrade > /dev/null 2>&1 && apt-get install -y -qq jq curl > /dev/null 2>&1
-
-# Used to determine the latest kernel version in the script
-ARG NETBOOT_IP
-COPY kernel/install-kernel-packages.sh install-kernel-packages.sh
-RUN ./install-kernel-packages.sh $NETBOOT_IP
-
+RUN apt-get install -y -qq $(apt-cache depends linux-image-generic | grep -P 'Depends:\s+linux-image-\d|Depends:\s+linux-modules-extra-' | cut -d ':' -f2 | tr -d "<> ") > /dev/null 2>&1
 # Install bluetooth drivers for some devices only. The linux-firmware package is huge, so we only take some files we know we need.
 # At the moment, the only bluetooth business requirement is the warehouse Odilia, where ProGloves are connected directly via Bluetooth instead of the USB-Dock. In Odilia, we therefore use only Intel NUCs, which need the "ibt-19-0-4*" files and the "Captiva Power Starter I73-688", which need the ibt-0041-0041* files.
 # "iwlfiwi-*" files are not needed for bluetooth anymore but also include Intel Killer Wifi Drivers, which are nice to have.
@@ -82,27 +75,7 @@ RUN mkdir -p /etc/NetworkManager/conf.d/ && touch /etc/NetworkManager/conf.d/10-
 COPY --chown=root:root --chmod=755 ./zram-config/init-zram-swapping /usr/bin/init-zram-swapping
 COPY --chown=root:root --chmod=644 ./zram-config/zram-config.service /lib/systemd/system/zram-config.service
 
-# environment settings
-ARG DEBIAN_FRONTEND="noninteractive"
-ENV XDG_CONFIG_HOME="/config/xdg"
-
-# add files
-COPY /initrd-patch /
-RUN chmod +x /curl-hook && cp /curl-hook /usr/share/initramfs-tools/hooks/
-
-RUN \
- echo "**** install deps ****" && \
- apt-get update && \
- apt-get install -y \
-	casper \
-	patch \
-    busybox-initramfs \
-	rsync && \
- echo "**** patch casper ****" && \
- patch /usr/share/initramfs-tools/scripts/casper < /patch && \
- patch /usr/share/initramfs-tools/scripts/casper-bottom/24preseed < /preseed-patch
-
-RUN update-initramfs -u
+RUN ls -ls /boot/
 
 # This cleanup works, as we'll be copying the complete filesystem later, therefore omitting any files that would still exist in an underlying layer.
 # delete obsolete packages and any temporary state
