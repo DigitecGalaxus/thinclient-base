@@ -20,8 +20,8 @@ done
 
 # This argument is required to read the latest kernel version from the netboot server
 if [[ "$netbootIP" == "" ]]; then
-    echo "Error: No arguments passed. Make sure to pass at least the Netboot IP Address, e.g. netbootIP=10.1.30.7"
-    exit 1
+    buildSquashfsAndPromote="false"
+    echo "Warning: No netbootIP passed. Setting buildSquashfsAndPromote=false and building locally."
 fi
 if [[ "$netbootUsername" == "" ]]; then
     netbootUsername="master"
@@ -70,7 +70,7 @@ echo "##vso[task.setvariable variable=branchName;isOutput=true]$branchName"
 squashfsFilename="base.squashfs"
 
 # --no-cache is useful to apply the latest updates within an apt-get full-upgrade
-docker image build --build-arg OS_RELEASE=${squashfsFilename%.*} --build-arg NETBOOT_IP=$netbootIP $dockerBuildCacheArgument -t "$imageName" .
+docker image build --build-arg OS_RELEASE=${squashfsFilename%.*} $dockerBuildCacheArgument -t "$imageName" .
 
 # If you want to promote the image directly to the caching server, run ./build.sh buildSquashfsAndPromote="true"
 if [[ "$buildSquashfsAndPromote" != "true" ]]; then
