@@ -72,14 +72,14 @@ squashfsFilename="base.squashfs"
 # --no-cache is useful to apply the latest updates within an apt-get full-upgrade
 docker image build --build-arg OS_RELEASE=${squashfsFilename%.*} $dockerBuildCacheArgument -t "$imageName" .
 
+# Build bootartifacts and exporting them directly
+DOCKER_BUILDKIT=1 docker image build --build-arg IMAGE_BASE=$imageName --file bootartifacts.Dockerfile --output ./ .
+
 # If you want to promote the image directly to the caching server, run ./build.sh buildSquashfsAndPromote="true"
 if [[ "$buildSquashfsAndPromote" != "true" ]]; then
     echo "Skipping squashfs build and promotion"
     exit 0
 fi
-
-# Build bootartifacts and exporting them directly
-DOCKER_BUILDKIT=1 docker image build --build-arg IMAGE_BASE=$imageName --file bootartifacts.Dockerfile --output ./ .
 
 tarFileName="newfilesystem.tar"
 removeFileIfExists "$tarFileName"
