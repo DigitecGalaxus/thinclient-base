@@ -8,7 +8,4 @@ tarball
 *.pem
 endpoints.yml*
 versions.json
-latest-kernel-version.json
-initrd
-initrd.img
-vmlinuz
+exported-artifacts

@@ -1,7 +1,6 @@
 #!/bin/bash
 set -e -o pipefail
-
-# This script builds a squashfs containing a customized ubuntu distribution designed to be network booted
+# This script is used to build all artifacts needed to run netbooted thinclients: Docker images for further usage, kernel, initrd as well as the squashed rootfs
 
 function removeFileIfExists {
     fileName="$1"
@@ -18,97 +17,70 @@ for ARGUMENT in "$@"; do
     export "$KEY"="$VALUE"
 done
 
-# This argument is required to read the latest kernel version from the netboot server
-if [[ "$netbootIP" == "" ]]; then
-    buildSquashfsAndPromote="false"
-    echo "Warning: No netbootIP passed. Setting buildSquashfsAndPromote=false and building locally."
+# This argument is used in order to trigger the export of artifacts as files (kernel, initrd and squashed rootfs)
+if [[ "$exportArtifacts" == "" ]]; then
+    exportArtifacts="false"
+    echo "Warning: No exportArtifacts passed. Only building the docker image for further usage."
 fi
-if [[ "$netbootUsername" == "" ]]; then
-    netbootUsername="master"
-    echo "Warning: No netbootUsername passed. Using $netbootUsername as netbootUsername"
-fi
-if [[ "$netbootSSHPrivateKey" == "" ]]; then
-    netbootSSHPrivateKey="$(pwd)/netboot-server-new-arch.pem"
-    echo "Warning: No netbootSSHPrivateKey passed. Using $netbootSSHPrivateKey as netbootSSHPrivateKey"
-fi
+
+# This argument is used to clearly identify the built artifacts and docker images
 if [[ "$branchName" == "" ]]; then
     # To be consistent with the naming of the azure devops variable Build.SourceBranchName, we remove the prefixes containing slashes
     branchName=$(git symbolic-ref -q --short HEAD | rev | cut -d'/' --fields=1 | rev)
-    echo "Warning: No branch name passed. Using $branchName as branch name"
+    echo "Warning: No branch name passed. Using $branchName as branch name."
 fi
-if [[ "$gitCommitShortSha" == "" ]]; then
-    gitCommitShortSha="$(git log -1 --pretty=format:%h)"
-    echo "Warning: No git commit short sha passed. Using $gitCommitShortSha as git commit short sha"
-fi
-# In AzureDevOps it's only possible to pass the full commit sha - this is too long for us so we shorten it to 7 characters
-gitCommitShortSha="${gitCommitShortSha:0:7}"
-if [[ "$useDockerBuildCache" == "" ]]; then
-    useDockerBuildCache="true"
-    echo "Warning: No useDockerBuildCache passed. Using $useDockerBuildCache as useDockerBuildCache"
-fi
-if [[ "$buildSquashfsAndPromote" == "" ]]; then
-    buildSquashfsAndPromote="false"
-    echo "Warning: No buildSquashfsAndPromote passed. Using $buildSquashfsAndPromote as buildSquashfsAndPromote"
-fi
-if [[ "$useDockerBuildCache" == "true" || "$useDockerBuildCache" == "True" ]]; then
-    dockerBuildCacheArgument=""
-else
+
+# This argument is used to force a complete rebuild by ignoring any cached docker layers. Probably handy when Ubuntu packages have to be updated from the repos.
+if [[ "$disableDockerCaching" == "true" || "$disableDockerCaching" == "True" ]]; then
     dockerBuildCacheArgument="--no-cache --pull"
-fi
-if [[ "$folderToPromoteTo" == "" ]]; then
-    folderToPromoteTo="dev"
-    echo "Warning: No folderToPromoteTo passed. Using $folderToPromoteTo as folderToPromoteTo"
+else
+    echo "Info: Docker Caching is not disabled."
+    dockerBuildCacheArgument=""
 fi
 
 # Setting this intentionally after the argument parsing for the shell script
 set -u
 
-imageName="anymodconrst001dg.azurecr.io/planetexpress/thinclient-base:$branchName"
-echo "##vso[task.setvariable variable=branchName;isOutput=true]$branchName"
+# Setting the target docker image name
+imageName="thinclient-base:$branchName"
 
-# Name of the resulting squashfs file, e.g. 21-01-17-master-6d358edc.squashfs
-squashfsFilename="base.squashfs"
+# Running the base-image docker build.
+docker image build --progress=plain $dockerBuildCacheArgument -t "$imageName" ./base-image
 
-# --no-cache is useful to apply the latest updates within an apt-get full-upgrade
-docker image build --build-arg OS_RELEASE=${squashfsFilename%.*} $dockerBuildCacheArgument -t "$imageName" .
-
-# Build bootartifacts and exporting them directly
-DOCKER_BUILDKIT=1 docker image build --build-arg IMAGE_BASE=$imageName --file bootartifacts.Dockerfile --output ./ .
-
-# If you want to promote the image directly to the caching server, run ./build.sh buildSquashfsAndPromote="true"
-if [[ "$buildSquashfsAndPromote" != "true" ]]; then
-    echo "Skipping squashfs build and promotion"
+# If you want to export the artifacts on this stage, run ./build.sh exportArtifacts="true"
+if [[ "$exportArtifacts" != "true" ]]; then
+    echo "Skipping export of artifacts; the base docker image is now ready for further processing on this host."
     exit 0
 fi
 
-tarFileName="newfilesystem.tar"
-removeFileIfExists "$tarFileName"
+echo "Purging exported-artifacts folder before a new build..."
+rm -r ./exported-artifacts/*
+
+# Running the bootartifacts docker build and exporting them directly.
+DOCKER_BUILDKIT=1 docker image build --progress=plain --build-arg IMAGE_BASE=$imageName --output ./exported-artifacts ./bootartifacts
+
+# Name of the resulting squashfs file, e.g. 21-01-17-master-6d358edc.squashfs
+squashfsFile="$(pwd)"/exported-artifacts/base.squashfs
+
+tarFile="$(pwd)"/exported-artifacts/base.tar
+removeFileIfExists "$tarFile"
 
 echo "Starting to tar container filesystem - this will take a while..."
 # This needs to be a docker container run to also copy container runtime info such as /etc/resolv.conf
 containerID=$(docker run -d "$imageName" tail -f /dev/null)
-docker cp "$containerID:/" - >"$tarFileName"
+docker cp "$containerID:/" - >"$tarFile"
 docker rm -f "$containerID"
 
 echo "Starting to convert tar file to squashfs file - this will take a while..."
 
-removeFileIfExists "$squashfsFilename"
-touch "$squashfsFilename"
+removeFileIfExists "$squashfsFile"
+touch "$squashfsFile"
 squashfsContainerID=$(docker run -d -u $(id -u) \
-    -v "$(pwd)/$tarFileName:/var/live/$tarFileName" \
-    -v "$(pwd)/$squashfsFilename:/var/live/newfilesystem.squashfs" \
-    dgpublicimagesprod.azurecr.io/planetexpress/squashfs-tools:latest /bin/sh -c "tar2sqfs --force --quiet newfilesystem.squashfs < /var/live/$tarFileName")
+    -v "$tarFile:/var/live/$tarFile" \
+    -v "$squashfsFile:/var/live/newfilesystem.squashfs" \
+    dgpublicimagesprod.azurecr.io/planetexpress/squashfs-tools:latest /bin/sh -c "tar2sqfs --force --quiet newfilesystem.squashfs < /var/live/$tarFile")
 docker wait "$squashfsContainerID"
 docker rm -f "$squashfsContainerID"
-rm -f "$(pwd)/$tarFileName"
+rm -f "$tarFile"
 
-squashfsAbsolutePath="$(pwd)/$squashfsFilename"
-vmlinuzAbsolutePath="$(pwd)/vmlinuz"
-initrdAbsolutePath="$(pwd)/initrd.img"
-
-# If you want to promote the image directly to the caching server on dev or prod, run ./build.sh buildSquashfsAndPromote="true" folderToPromoteTo="dev"
-echo "Uploading image to caching server..."
-ssh -i "$netbootSSHPrivateKey" -o StrictHostKeyChecking=no "$netbootUsername@$netbootIP" "mkdir -p /home/$netbootUsername/netboot/assets/$folderToPromoteTo/$(date +%y-%m-%d)-$branchName-$gitCommitShortSha/"
-scp -i "$netbootSSHPrivateKey" -o StrictHostKeyChecking=no "$squashfsAbsolutePath" "$netbootUsername@$netbootIP:/home/$netbootUsername/netboot/assets/$folderToPromoteTo/$(date +%y-%m-%d)-$branchName-$gitCommitShortSha/$squashfsFilename"
-scp -i "$netbootSSHPrivateKey" -o StrictHostKeyChecking=no "$initrdAbsolutePath" "$netbootUsername@$netbootIP:/home/$netbootUsername/netboot/assets/$folderToPromoteTo/$(date +%y-%m-%d)-$branchName-$gitCommitShortSha/initrd"
-scp -i "$netbootSSHPrivateKey" -o StrictHostKeyChecking=no "$vmlinuzAbsolutePath" "$netbootUsername@$netbootIP:/home/$netbootUsername/netboot/assets/$folderToPromoteTo/$(date +%y-%m-%d)-$branchName-$gitCommitShortSha/vmlinuz"
+echo "Exported artifacts are copied to ./exported-artifacts, have fun."

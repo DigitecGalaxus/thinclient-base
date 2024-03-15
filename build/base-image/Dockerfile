@@ -62,10 +62,6 @@ RUN apt-get update -qq > /dev/null 2>&1 && apt-get install -y -qq fonts-noto-col
 # Prevent wallet / Key manager popups
 RUN rm -f /usr/share/dbus-1/services/org.kde.kwalletd5.service
 
-# Set the environment variable OS_RELEASE to identify the exact squashfs file booted. Can be visualized in Conky.
-ARG OS_RELEASE
-RUN echo "export dg_os_release=$OS_RELEASE" >> /etc/profile
-
 # Initialise Network Manager
 COPY ./network/NetworkManager.conf /etc/NetworkManager/NetworkManager.conf
 # This seems to be necessary for the network manager to recognize the default connection properly
