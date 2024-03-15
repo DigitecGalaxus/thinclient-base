@@ -16,3 +16,19 @@ esac
 . /usr/share/initramfs-tools/hook-functions
 
 copy_exec /usr/bin/curl /bin
+copy_exec /usr/bin/wget /bin
+
+## copy ssl certs
+mkdir -p \
+	$DESTDIR/etc/ssl \
+	$DESTDIR/usr/share/ca-certificates/
+cp -a \
+	/etc/ssl/certs \
+	$DESTDIR/etc/ssl/
+cp -a \
+	/etc/ca-certificates \
+	$DESTDIR/etc/
+cp -a \
+	/usr/share/ca-certificates/mozilla \
+	$DESTDIR/usr/share/ca-certificates/
+echo "ca_directory=/etc/ssl/certs" > $DESTDIR/etc/wgetrc
