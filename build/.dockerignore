@@ -1,2 +1,5 @@
 *.tar
 *.squashfs
+initrd
+initrd.img
+vmlinuz

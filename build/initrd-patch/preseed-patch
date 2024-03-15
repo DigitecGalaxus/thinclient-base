@@ -1,0 +1,17 @@
+--- 24preseed	2020-01-30 00:23:41.000000000 +0000
++++ 24preseed.new	2020-04-23 16:46:20.450998276 +0000
+@@ -66,10 +66,11 @@
+ 		file=*)
+ 			locations="${x#file=} $locations"
+ 			;;
+-		url=*.iso)
+-			# not a pressed, but a net-mount
++		url=*)
++                        chroot /casper/root.squashfs
++                        locations="/casper/root.squashfs $locations"
+ 			;;
+-		preseed/url=*|url=*)
++		preseed/url=*)
+ 			url_location="${x#url=}"
+ 			start_network
+ 			chroot /root wget -P /tmp "$url_location"

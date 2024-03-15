@@ -1,0 +1,42 @@
+--- casper      2020-04-08 21:24:58.000000000 +0000
++++ casper.new  2020-04-23 17:13:23.139096816 +0000
+@@ -46,7 +46,7 @@ parse_cmdline() {
+                     STATICIP="frommedia"
+                 fi
+                 export STATICIP ;;
+-            url=*.iso)
++            url=*)
+                 export NETBOOT=url
+                 export URL="${x#url=}" ;;
+             uuid=*)
+@@ -255,22 +255,16 @@ do_nfsmount() {
+
+ do_urlmount() {
+     rc=1
+-    modprobe "${MP_QUIET}" isofs
+-
+-    [ "$quiet" != "y" ] && log_begin_msg "Trying to download and mount ${URL}"
+-
+-    target=$(basename "${URL}")
+-
+-    if wget "${URL}" -O "${target}"; then
+-        if mount -o ro "${target}" "${mountpoint}"; then
+-            if is_casper_path $mountpoint && matches_uuid $mountpoint; then
+-                rc=0
+-            else
+-                umount $mountpoint
+-            fi
+-        fi
++    mkdir -p ${mountpoint}
++    mount -t tmpfs -o size=`/bin/curl -sI ${URL} | sed -ne '/Content-Length/{s/.*: //;p}'` tmpfs ${mountpoint}
++    mkdir -p ${mountpoint}/casper
++    if /bin/curl -L ${URL} -o ${mountpoint}/casper/root.squashfs; then rc=0; fi
++    if [ ! -z "$(/bin/curl -sI "${URL}".part2 | grep "200 OK\|302 Found" || :)" ]; then
++        if /bin/curl -L ${URL}.part2 -o ->> ${mountpoint}/casper/root.squashfs; then rc=0; fi
++    fi
++    if [ ! -z "$(/bin/curl -sI "${URL}".part3 | grep "200 OK\|302 Found" || :)" ]; then
++        if /bin/curl -L ${URL}.part3 -o ->> ${mountpoint}/casper/root.squashfs; then rc=0; fi
+     fi
+-
+     return ${rc}
+ }
