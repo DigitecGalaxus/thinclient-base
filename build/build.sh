@@ -17,10 +17,16 @@ for ARGUMENT in "$@"; do
     export "$KEY"="$VALUE"
 done
 
+# This argument is used in order to trigger the export of the SquashFS into the exported-artifacts directory.
+if [[ "$exportSquashFS" == "" ]]; then
+    exportSquashFS="false"
+    echo "Warning: No exportSquashFS passed. Only building the docker image for further usage."
+fi
+
 # This argument is used in order to trigger the export of artifacts as files (kernel, initrd and squashed rootfs)
-if [[ "$exportArtifacts" == "" ]]; then
-    exportArtifacts="false"
-    echo "Warning: No exportArtifacts passed. Only building the docker image for further usage."
+if [[ "$exportBootArtifacts" == "" ]]; then
+    exportBootArtifacts="false"
+    echo "Warning: No exportBootArtifacts passed. Only building the docker image for further usage."
 fi
 
 # This argument is used to clearly identify the built artifacts and docker images
@@ -47,17 +53,23 @@ imageName="thinclient-base:$branchName"
 # Running the base-image docker build.
 docker image build --progress=plain $dockerBuildCacheArgument -t "$imageName" ./base-image
 
-# If you want to export the artifacts on this stage, run ./build.sh exportArtifacts="true"
-if [[ "$exportArtifacts" != "true" ]]; then
-    echo "Skipping export of artifacts; the base docker image is now ready for further processing on this host."
+# If you want to export the artifacts on this stage, run ./build.sh exportSquashFS="true"
+if [[ "$exportBootArtifacts" == "true" ]]; then
+    echo "Purging old boot artifacts before starting a new build..."
+    rm -r ./exported-artifacts/initrd.img
+    rm -r ./exported-artifacts/vmlinuz
+    # Running the bootartifacts docker build and exporting them directly.
+    DOCKER_BUILDKIT=1 docker image build --progress=plain --build-arg IMAGE_BASE=$imageName --output ./exported-artifacts ./bootartifacts
+fi
+
+# If you want to export the squashFS on this stage, run ./build.sh exportSquashFS="true"
+if [[ "$exportSquashFS" != "true" ]]; then
+    echo "Skipping export of SquashFS; the base docker image is now ready for further processing on this host."
     exit 0
 fi
 
-echo "Purging exported-artifacts folder before a new build..."
-rm -r ./exported-artifacts/*
-
-# Running the bootartifacts docker build and exporting them directly.
-DOCKER_BUILDKIT=1 docker image build --progress=plain --build-arg IMAGE_BASE=$imageName --output ./exported-artifacts ./bootartifacts
+echo "Purging old SquashFS before starting a new build..."
+rm -r ./exported-artifacts/base.squashfs
 
 # Name of the resulting squashfs file, e.g. 21-01-17-master-6d358edc.squashfs
 squashfsFile="$(pwd)"/exported-artifacts/base.squashfs
