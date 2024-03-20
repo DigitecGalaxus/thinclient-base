@@ -34,6 +34,7 @@ if [[ "$baseBranchName" == "" ]]; then
     # To be consistent with the naming of the azure devops variable Build.SourcebaseBranchName, we remove the prefixes containing slashes
     baseBranchName=$(git symbolic-ref -q --short HEAD | rev | cut -d'/' --fields=1 | rev)
     echo "Warning: No branch name passed. Using $baseBranchName as branch name."
+    echo "##vso[task.setvariable variable=baseBranchName;isOutput=true]$baseBranchName"
 fi
 
 # This argument is used to force a complete rebuild by ignoring any cached docker layers. Probably handy when Ubuntu packages have to be updated from the repos.
