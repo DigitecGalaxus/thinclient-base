@@ -30,10 +30,10 @@ if [[ "$exportBootArtifacts" == "" ]]; then
 fi
 
 # This argument is used to clearly identify the built artifacts and docker images
-if [[ "$branchName" == "" ]]; then
-    # To be consistent with the naming of the azure devops variable Build.SourceBranchName, we remove the prefixes containing slashes
-    branchName=$(git symbolic-ref -q --short HEAD | rev | cut -d'/' --fields=1 | rev)
-    echo "Warning: No branch name passed. Using $branchName as branch name."
+if [[ "$baseBranchName" == "" ]]; then
+    # To be consistent with the naming of the azure devops variable Build.SourcebaseBranchName, we remove the prefixes containing slashes
+    baseBranchName=$(git symbolic-ref -q --short HEAD | rev | cut -d'/' --fields=1 | rev)
+    echo "Warning: No branch name passed. Using $baseBranchName as branch name."
 fi
 
 # This argument is used to force a complete rebuild by ignoring any cached docker layers. Probably handy when Ubuntu packages have to be updated from the repos.
@@ -48,7 +48,7 @@ fi
 set -u
 
 # Setting the target docker image name
-imageName="thinclient-base:$branchName"
+imageName="thinclient-base:$baseBranchName"
 
 # Running the base-image docker build.
 docker image build --progress=plain $dockerBuildCacheArgument -t "$imageName" ./base-image
