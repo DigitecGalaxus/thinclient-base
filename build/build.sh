@@ -56,8 +56,12 @@ docker image build --progress=plain $dockerBuildCacheArgument -t "$imageName" ./
 # If you want to export the artifacts on this stage, run ./build.sh exportSquashFS="true"
 if [[ "$exportBootArtifacts" == "true" ]]; then
     echo "Purging old boot artifacts before starting a new build..."
-    rm -r ./exported-artifacts/initrd.img
-    rm -r ./exported-artifacts/vmlinuz
+    if [ -f "./exported-artifacts/initrd.img" ]; then     # if file exists
+        rm -r ./exported-artifacts/initrd.img
+    fi
+    if [ -f "./exported-artifacts/vmlinuz" ]; then 
+        rm -r ./exported-artifacts/vmlinuz
+    fi
     # Running the bootartifacts docker build and exporting them directly.
     DOCKER_BUILDKIT=1 docker image build --progress=plain --build-arg IMAGE_BASE=$imageName --output ./exported-artifacts ./bootartifacts
 fi
@@ -69,7 +73,9 @@ if [[ "$exportSquashFS" != "true" ]]; then
 fi
 
 echo "Purging old SquashFS before starting a new build..."
-rm -r ./exported-artifacts/base.squashfs
+if [ -f "./exported-artifacts/base.squashfs" ]; then 
+    rm -r ./exported-artifacts/base.squashfs
+fi
 
 # Name of the resulting squashfs file, e.g. 21-01-17-master-6d358edc.squashfs
 squashfsFile="$(pwd)"/exported-artifacts/base.squashfs
