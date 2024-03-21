@@ -1,5 +1,5 @@
 #!/bin/bash
-set -e -o pipefail
+set -e -o -x pipefail
 # This script is used to build all artifacts needed to run netbooted thinclients: Docker images for further usage, kernel, initrd as well as the squashed rootfs
 
 function removeFileIfExists {
@@ -44,7 +44,7 @@ if [[ "$baseImageBranch" == "" ]]; then
 fi
 
 # Setting this intentionally after the argument parsing for the shell script
-# set -u
+set -u
 
 # Running the base-image docker build.
 docker image build --progress=plain $dockerCaching -t "thinclient-base:$baseImageBranch" ./base-image
