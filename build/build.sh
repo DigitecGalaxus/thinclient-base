@@ -37,19 +37,17 @@ else
     dockerCaching=""
 fi
 
-# To be consistent with the naming of the azure devops variable Build.SourcebaseBranchName, we remove the prefixes containing slashes
-baseBranchName=$(Build.SourceBranchName)
-echo "Using thinclient-base:$baseBranchName as image tag."
-echo "##vso[task.setvariable variable=baseBranchName;isOutput=true]$baseBranchName"
+# Setting the target docker image name
+if [[ "$baseImageName" == "" ]]; then
+    baseImageName="thinclient-base:main"
+    echo "Warning: No baseImageName passed. Using $baseImageName to tag the image."
+fi
 
 # Setting this intentionally after the argument parsing for the shell script
 set -u
 
-# Setting the target docker image name
-imageName="thinclient-base:$baseBranchName"
-
 # Running the base-image docker build.
-docker image build --progress=plain $dockerCaching -t "$imageName" ./base-image
+docker image build --progress=plain $dockerCaching -t "$baseImageName" ./base-image
 
 # If you want to export the artifacts on this stage, run ./build.sh exportSquashFS="true"
 if [[ "$exportBootArtifacts" == "true" ]]; then
@@ -61,7 +59,7 @@ if [[ "$exportBootArtifacts" == "true" ]]; then
         rm -r ./exported-artifacts/vmlinuz
     fi
     # Running the bootartifacts docker build and exporting them directly.
-    DOCKER_BUILDKIT=1 docker image build --progress=plain --build-arg BASEBRANCHNAME=$baseBranchName --output ./exported-artifacts ./bootartifacts
+    DOCKER_BUILDKIT=1 docker image build --progress=plain --build-arg BASEIMAGE=$baseImageName --output ./exported-artifacts ./bootartifacts
 fi
 
 # If you want to export the squashFS on this stage, run ./build.sh exportSquashFS="true"
