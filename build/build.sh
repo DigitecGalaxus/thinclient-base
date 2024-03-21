@@ -29,21 +29,17 @@ if [[ "$exportBootArtifacts" == "" ]]; then
     echo "Warning: No exportBootArtifacts passed. Only building the docker image for further usage."
 fi
 
-# This argument is used to clearly identify the built artifacts and docker images
-if [[ "$baseBranchName" == "" ]]; then
-    # To be consistent with the naming of the azure devops variable Build.SourcebaseBranchName, we remove the prefixes containing slashes
-    baseBranchName=$(git symbolic-ref -q --short HEAD | rev | cut -d'/' --fields=1 | rev)
-    echo "Warning: No branch name passed. Using $baseBranchName as branch name."
-    echo "##vso[task.setvariable variable=baseBranchName;isOutput=true]$baseBranchName"
+# This argument is used to force a complete rebuild by ignoring any cached docker layers. Probably handy when Ubuntu packages have to be updated from the repos.
+if [[ "$dockerCaching" == "false" || "$dockerCaching" == "False" ]]; then
+    dockerCaching="--no-cache --pull"
+else
+    echo "Info: Docker Caching is enabled."
+    dockerCaching=""
 fi
 
-# This argument is used to force a complete rebuild by ignoring any cached docker layers. Probably handy when Ubuntu packages have to be updated from the repos.
-if [[ "$disableDockerCaching" == "true" || "$disableDockerCaching" == "True" ]]; then
-    dockerBuildCacheArgument="--no-cache --pull"
-else
-    echo "Info: Docker Caching is not disabled."
-    dockerBuildCacheArgument=""
-fi
+# To be consistent with the naming of the azure devops variable Build.SourcebaseBranchName, we remove the prefixes containing slashes
+baseBranchName=$(git symbolic-ref -q --short HEAD | rev | cut -d'/' --fields=1 | rev)
+echo "##vso[task.setvariable variable=baseBranchName;isOutput=true]$baseBranchName"
 
 # Setting this intentionally after the argument parsing for the shell script
 set -u
@@ -52,7 +48,7 @@ set -u
 imageName="thinclient-base:$baseBranchName"
 
 # Running the base-image docker build.
-docker image build --progress=plain $dockerBuildCacheArgument -t "$imageName" ./base-image
+docker image build --progress=plain $dockerCaching -t "$imageName" ./base-image
 
 # If you want to export the artifacts on this stage, run ./build.sh exportSquashFS="true"
 if [[ "$exportBootArtifacts" == "true" ]]; then
@@ -64,7 +60,7 @@ if [[ "$exportBootArtifacts" == "true" ]]; then
         rm -r ./exported-artifacts/vmlinuz
     fi
     # Running the bootartifacts docker build and exporting them directly.
-    DOCKER_BUILDKIT=1 docker image build --progress=plain --build-arg IMAGE_BASE=$imageName --output ./exported-artifacts ./bootartifacts
+    DOCKER_BUILDKIT=1 docker image build --progress=plain --build-arg BASEBRANCHNAME=$baseBranchName --output ./exported-artifacts ./bootartifacts
 fi
 
 # If you want to export the squashFS on this stage, run ./build.sh exportSquashFS="true"
