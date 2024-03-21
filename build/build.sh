@@ -29,37 +29,37 @@ if [[ "$exportBootArtifacts" == "" ]]; then
     echo "Warning: No exportBootArtifacts passed. Only building the docker image for further usage."
 fi
 
-# This argument is used to clearly identify the built artifacts and docker images
-if [[ "$branchName" == "" ]]; then
-    # To be consistent with the naming of the azure devops variable Build.SourceBranchName, we remove the prefixes containing slashes
-    branchName=$(git symbolic-ref -q --short HEAD | rev | cut -d'/' --fields=1 | rev)
-    echo "Warning: No branch name passed. Using $branchName as branch name."
+# This argument is used to force a complete rebuild by ignoring any cached docker layers. Probably handy when Ubuntu packages have to be updated from the repos.
+if [[ "$dockerCaching" == "false" || "$dockerCaching" == "False" ]]; then
+    dockerCaching="--no-cache --pull"
+else
+    echo "Info: Docker Caching is enabled."
+    dockerCaching=""
 fi
 
-# This argument is used to force a complete rebuild by ignoring any cached docker layers. Probably handy when Ubuntu packages have to be updated from the repos.
-if [[ "$disableDockerCaching" == "true" || "$disableDockerCaching" == "True" ]]; then
-    dockerBuildCacheArgument="--no-cache --pull"
-else
-    echo "Info: Docker Caching is not disabled."
-    dockerBuildCacheArgument=""
+# Setting the target docker image name
+if [[ "$baseImageBranch" == "" ]]; then
+    baseImageBranch="main"
+    echo "Warning: No baseImageBranch passed. Using thinclient-base:$baseImageBranch to tag the image."
 fi
 
 # Setting this intentionally after the argument parsing for the shell script
 set -u
 
-# Setting the target docker image name
-imageName="thinclient-base:$branchName"
-
 # Running the base-image docker build.
-docker image build --progress=plain $dockerBuildCacheArgument -t "$imageName" ./base-image
+docker image build --progress=plain $dockerCaching -t "thinclient-base:$baseImageBranch" ./base-image
 
 # If you want to export the artifacts on this stage, run ./build.sh exportSquashFS="true"
 if [[ "$exportBootArtifacts" == "true" ]]; then
     echo "Purging old boot artifacts before starting a new build..."
-    rm -r ./exported-artifacts/initrd.img
-    rm -r ./exported-artifacts/vmlinuz
+    if [ -f "./exported-artifacts/initrd.img" ]; then     # if file exists
+        rm -r ./exported-artifacts/initrd.img
+    fi
+    if [ -f "./exported-artifacts/vmlinuz" ]; then 
+        rm -r ./exported-artifacts/vmlinuz
+    fi
     # Running the bootartifacts docker build and exporting them directly.
-    DOCKER_BUILDKIT=1 docker image build --progress=plain --build-arg IMAGE_BASE=$imageName --output ./exported-artifacts ./bootartifacts
+    DOCKER_BUILDKIT=1 docker image build --progress=plain --build-arg BASEIMAGE=thinclient-base:$baseImageBranch --output ./exported-artifacts ./bootartifacts
 fi
 
 # If you want to export the squashFS on this stage, run ./build.sh exportSquashFS="true"
@@ -69,7 +69,9 @@ if [[ "$exportSquashFS" != "true" ]]; then
 fi
 
 echo "Purging old SquashFS before starting a new build..."
-rm -r ./exported-artifacts/base.squashfs
+if [ -f "./exported-artifacts/base.squashfs" ]; then 
+    rm -r ./exported-artifacts/base.squashfs
+fi
 
 # Name of the resulting squashfs file, e.g. 21-01-17-master-6d358edc.squashfs
 squashfsFile="$(pwd)"/exported-artifacts/base.squashfs
