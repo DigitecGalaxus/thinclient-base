@@ -38,7 +38,8 @@ else
 fi
 
 # To be consistent with the naming of the azure devops variable Build.SourcebaseBranchName, we remove the prefixes containing slashes
-baseBranchName=$(git rev-parse --abbrev-ref HEAD)
+baseBranchName=$(git symbolic-ref --short HEAD)
+echo "Using thinclient-base:$baseBranchName as image tag."
 echo "##vso[task.setvariable variable=baseBranchName;isOutput=true]$baseBranchName"
 
 # Setting this intentionally after the argument parsing for the shell script
