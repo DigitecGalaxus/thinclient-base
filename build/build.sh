@@ -1,7 +1,5 @@
 #!/bin/bash
 set -e -o pipefail
-set -x # add this line
-trap 'echo "Error at about line $LINENO"' ERR
 # This script is used to build all artifacts needed to run netbooted thinclients: Docker images for further usage, kernel, initrd as well as the squashed rootfs
 
 function removeFileIfExists {
@@ -40,8 +38,7 @@ else
 fi
 
 # To be consistent with the naming of the azure devops variable Build.SourcebaseBranchName, we remove the prefixes containing slashes
-baseBranchName=$(git symbolic-ref -q --short HEAD | rev | cut -d'/' --fields=1 | rev)
-
+baseBranchName=$(git rev-parse --abbrev-ref HEAD)
 echo "##vso[task.setvariable variable=baseBranchName;isOutput=true]$baseBranchName"
 
 # Setting this intentionally after the argument parsing for the shell script
@@ -51,7 +48,7 @@ set -u
 imageName="thinclient-base:$baseBranchName"
 
 # Running the base-image docker build.
-docker image build --progress=plain $dockerCaching -t "$imageName" ./base-image || echo "Docker build failed with status $?"
+docker image build --progress=plain $dockerCaching -t "$imageName" ./base-image
 
 # If you want to export the artifacts on this stage, run ./build.sh exportSquashFS="true"
 if [[ "$exportBootArtifacts" == "true" ]]; then
