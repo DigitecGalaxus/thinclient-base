@@ -39,6 +39,11 @@ fi
 
 # To be consistent with the naming of the azure devops variable Build.SourcebaseBranchName, we remove the prefixes containing slashes
 baseBranchName=$(git symbolic-ref -q --short HEAD | rev | cut -d'/' --fields=1 | rev)
+if [ $? -ne 0 ]; then
+    echo "Failed to determine base branch name"
+    exit 1
+fi
+
 echo "##vso[task.setvariable variable=baseBranchName;isOutput=true]$baseBranchName"
 
 # Setting this intentionally after the argument parsing for the shell script
