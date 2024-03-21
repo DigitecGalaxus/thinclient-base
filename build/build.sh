@@ -38,16 +38,16 @@ else
 fi
 
 # Setting the target docker image name
-if [[ "$baseImageName" == "" ]]; then
-    baseImageName="thinclient-base:main"
-    echo "Warning: No baseImageName passed. Using $baseImageName to tag the image."
+if [[ "$baseImageBranch" == "" ]]; then
+    baseImageBranch="main"
+    echo "Warning: No baseImageBranch passed. Using thinclient-base:$baseImageBranch to tag the image."
 fi
 
 # Setting this intentionally after the argument parsing for the shell script
 set -u
 
 # Running the base-image docker build.
-docker image build --progress=plain $dockerCaching -t "$baseImageName" ./base-image
+docker image build --progress=plain $dockerCaching -t "thinclient-base:$baseImageBranch" ./base-image
 
 # If you want to export the artifacts on this stage, run ./build.sh exportSquashFS="true"
 if [[ "$exportBootArtifacts" == "true" ]]; then
@@ -59,7 +59,7 @@ if [[ "$exportBootArtifacts" == "true" ]]; then
         rm -r ./exported-artifacts/vmlinuz
     fi
     # Running the bootartifacts docker build and exporting them directly.
-    DOCKER_BUILDKIT=1 docker image build --progress=plain --build-arg BASEIMAGE=$baseImageName --output ./exported-artifacts ./bootartifacts
+    DOCKER_BUILDKIT=1 docker image build --progress=plain --build-arg BASEIMAGE=thinclient-base:$baseImageBranch --output ./exported-artifacts ./bootartifacts
 fi
 
 # If you want to export the squashFS on this stage, run ./build.sh exportSquashFS="true"
