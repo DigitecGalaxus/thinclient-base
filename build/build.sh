@@ -1,5 +1,6 @@
 #!/bin/bash
-set -e -o -x pipefail
+set -e -o pipefail
+set -x
 # This script is used to build all artifacts needed to run netbooted thinclients: Docker images for further usage, kernel, initrd as well as the squashed rootfs
 
 function removeFileIfExists {
