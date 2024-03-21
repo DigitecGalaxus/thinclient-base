@@ -1,5 +1,5 @@
 # This Dockerfile does not follow some best-practices, as it's not intended to be used as a Docker image. We simply use Docker as an abstraction for creating the filesystem we need.
-ARG IMAGE_BASE
+ARG BASEBRANCHNAME
 FROM thinclient-base:${BASEBRANCHNAME} as bootartifactbuilder
 
 # Set environment variables so apt installs packages non-interactively
