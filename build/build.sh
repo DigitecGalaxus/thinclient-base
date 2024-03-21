@@ -44,7 +44,7 @@ if [[ "$baseImageBranch" == "" ]]; then
 fi
 
 # Setting this intentionally after the argument parsing for the shell script
-set -u
+# set -u
 
 # Running the base-image docker build.
 docker image build --progress=plain $dockerCaching -t "thinclient-base:$baseImageBranch" ./base-image
