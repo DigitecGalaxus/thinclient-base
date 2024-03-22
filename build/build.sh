@@ -43,6 +43,9 @@ if [[ "$baseImageBranch" == "" ]]; then
     echo "Warning: No baseImageBranch passed. Using thinclient-base:$baseImageBranch to tag the image."
 fi
 
+# Strip everything before the last '/'
+baseImageBranch="${baseImageBranch##*/}"
+
 # Setting this intentionally after the argument parsing for the shell script
 set -u
 
