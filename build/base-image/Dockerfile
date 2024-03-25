@@ -1,5 +1,5 @@
 # This Dockerfile does not follow some best-practices, as it's not intended to be used as a Docker image. We simply use Docker as an abstraction for creating the filesystem we need.
-FROM ubuntu:23.10
+FROM ubuntu:23.04
 
 # Set environment variables so apt installs packages non-interactively
 ENV DEBIAN_FRONTEND=noninteractive DEBIAN_PRIORITY=critical
@@ -13,8 +13,22 @@ RUN apt-get update -qq > /dev/null 2>&1 && apt-get -qq -y full-upgrade > /dev/nu
 # Resolving the current stable kernel version via the metapackage "linux-image-generic" and installing it. Can be hardcoded if necessary.
 RUN apt-get install -y -qq $(apt-cache depends linux-image-generic | grep -P 'Depends:\s+linux-image-\d|Depends:\s+linux-modules-extra-' | cut -d ':' -f2 | tr -d "<> ") > /dev/null 2>&1
 
-# Installing all linux firmware to check image size.
-RUN apt-get install -y -qq linux-firmware > /dev/null 2>&1
+# Install bluetooth drivers for some devices only. The linux-firmware package is huge, so we only take some files we know we need.
+# At the moment, the only bluetooth business requirement is the warehouse Odilia, where ProGloves are connected directly via Bluetooth instead of the USB-Dock. In Odilia, we therefore use only Intel NUCs, which need the "ibt-19-0-4*" files and the "Captiva Power Starter I73-688", which need the ibt-0041-0041* files.
+# "iwlfiwi-*" files are not needed for bluetooth anymore but also include Intel Killer Wifi Drivers, which are nice to have.
+# For additional devices, run the bluetooth software on the device itself and check the kernel messages with `dmesg`. This should show a message similar to "[19.479715] Bluetooth: hci0: Failed to load Intel firmware file intel/ibt-0041-0041.sfi (-2)", which shows the file name that is missing. Check `lspci` if you need to find out what chip you've connected.
+RUN bash -c 'apt-get download linux-firmware && \
+    dpkg -x *.deb /tmp/linux-firmware/ && \
+    cp -r /tmp/linux-firmware/lib/firmware/iwlwifi-* /lib/firmware/ && \
+    mkdir /lib/firmware/intel/ && \ 
+    cp /tmp/linux-firmware/lib/firmware/intel/ibt-0041-0041* /lib/firmware/intel/ && \
+    cp /tmp/linux-firmware/lib/firmware/intel/ibt-19-0-4* /lib/firmware/intel/ && \
+    mkdir /lib/firmware/i915/ && \
+    cp /tmp/linux-firmware/lib/firmware/i915/* /lib/firmware/i915/ && \
+    mkdir /lib/firmware/amdgpu/ && \ 
+    cp /tmp/linux-firmware/lib/firmware/amdgpu/raven_* /lib/firmware/amdgpu/ && \
+    cp -r /tmp/linux-firmware/usr/share/doc/linux-firmware /usr/share/doc/ && \
+    rm -rfv /tmp/linux-firmware > /dev/null 2>&1 && rm -fv *.deb' > /dev/null 2>&1
 
 # Installing necessary packages for our base image.
 RUN apt-get install -y -qq software-properties-common gnupg2 apt-utils wget ntp sudo vim syslog-ng earlyoom iputils-ping dnsutils traceroute ca-certificates conky openssh-server libxss1 zram-config > /dev/null 2>&1
