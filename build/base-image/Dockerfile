@@ -71,9 +71,9 @@ RUN apt-get update -qq > /dev/null 2>&1 && \
 RUN rm -f /usr/share/dbus-1/services/org.kde.kwalletd5.service
 
 # Initialise Network Manager
-# COPY ./network/NetworkManager.conf /etc/NetworkManager/NetworkManager.conf
+COPY ./network/NetworkManager.conf /etc/NetworkManager/NetworkManager.conf
 # This seems to be necessary for the network manager to recognize the default connection properly
-# RUN mkdir -p /etc/NetworkManager/conf.d/ && touch /etc/NetworkManager/conf.d/10-globally-managed-devices.conf
+RUN mkdir -p /etc/NetworkManager/conf.d/ && touch /etc/NetworkManager/conf.d/10-globally-managed-devices.conf
 
 # Configure zram-swapping to save memory.
 COPY --chown=root:root --chmod=755 ./zram-config/init-zram-swapping /usr/bin/init-zram-swapping
