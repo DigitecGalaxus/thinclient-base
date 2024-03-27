@@ -55,12 +55,8 @@ docker image build --progress=plain $dockerCaching -t "thinclient-base:$baseImag
 # If you want to export the artifacts on this stage, run ./build.sh exportSquashFS="true"
 if [[ "$exportBootArtifacts" == "true" ]]; then
     echo "Purging old boot artifacts before starting a new build..."
-    if [ -f "./exported-artifacts/initrd.img" ]; then     # if file exists
-        rm -r ./exported-artifacts/initrd.img
-    fi
-    if [ -f "./exported-artifacts/vmlinuz" ]; then 
-        rm -r ./exported-artifacts/vmlinuz
-    fi
+    removeFileIfExists "./exported-artifacts/initrd.img"
+    removeFileIfExists "./exported-artifacts/vmlinuz"
     # Running the bootartifacts docker build and exporting them directly.
     DOCKER_BUILDKIT=1 docker image build --progress=plain --build-arg BASEIMAGE=thinclient-base:$baseImageBranch --output ./exported-artifacts ./bootartifacts
 fi
@@ -72,9 +68,7 @@ if [[ "$exportSquashFS" != "true" ]]; then
 fi
 
 echo "Purging old SquashFS before starting a new build..."
-if [ -f "./exported-artifacts/base.squashfs" ]; then 
-    rm -r ./exported-artifacts/base.squashfs
-fi
+removeFileIfExists "./exported-artifacts/base.squashfs"
 
 # Name of the resulting squashfs file, e.g. 21-01-17-master-6d358edc.squashfs
 squashfsFile="$(pwd)"/exported-artifacts/base.squashfs
@@ -84,7 +78,7 @@ removeFileIfExists "$tarFile"
 
 echo "Starting to tar container filesystem - this will take a while..."
 # This needs to be a docker container run to also copy container runtime info such as /etc/resolv.conf
-containerID=$(docker run -d "$imageName" tail -f /dev/null)
+containerID=$(docker run -d "thinclient-base:$baseImageBranch" tail -f /dev/null)
 docker cp "$containerID:/" - >"$tarFile"
 docker rm -f "$containerID"
 
@@ -92,7 +86,7 @@ echo "Starting to convert tar file to squashfs file - this will take a while..."
 
 removeFileIfExists "$squashfsFile"
 touch "$squashfsFile"
-squashfsContainerID=$(docker run -d -u $(id -u) \
+squashfsContainerID=$(docker run -d -u "$(id -u)" \
     -v "$tarFile:/var/live/$tarFile" \
     -v "$squashfsFile:/var/live/newfilesystem.squashfs" \
     dgpublicimagesprod.azurecr.io/planetexpress/squashfs-tools:latest /bin/sh -c "tar2sqfs --force --quiet newfilesystem.squashfs < /var/live/$tarFile")
