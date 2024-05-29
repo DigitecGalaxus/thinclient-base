@@ -11,8 +11,8 @@ RUN chmod +x /curl-hook && cp /curl-hook /usr/share/initramfs-tools/hooks/
 
 RUN \
  echo "**** install deps ****" && \
- apt-get update && \
- apt-get install -y \
+ apt-get update --allow-insecure-repositories && \
+ apt-get install -y --allow-unauthenticated \
 	casper \
 	patch \
     busybox-initramfs \
