@@ -29,7 +29,7 @@ RUN bash -c 'apt-get download linux-firmware && \
     cp -r /tmp/linux-firmware/usr/share/doc/linux-firmware /usr/share/doc/ && \
     rm -rfv /tmp/linux-firmware > /dev/null 2>&1 && rm -fv *.deb' > /dev/null 2>&1
 
-RUN apt-get install -y -qq software-properties-common gnupg2 apt-utils wget ntp sudo vim syslog-ng earlyoom iputils-ping dnsutils traceroute ca-certificates openssh-server libxss1 zram-config > /dev/null 2>&1
+RUN apt-get install -y -qq software-properties-common gnupg2 apt-utils wget ntp sudo vim syslog-ng earlyoom iputils-ping dnsutils traceroute ca-certificates conky openssh-server libxss1 zram-config > /dev/null 2>&1
 
 # Setup default login
 RUN echo ubuntu:ubuntu | chpasswd
@@ -86,6 +86,4 @@ RUN apt-get -qq autoremove -y > /dev/null 2>&1 && apt-get -qq clean > /dev/null 
     /var/log/* \
     /var/run/* \
     /var/crash/* \
-    /var/lib/apt/lists/* \
-    /usr/share/keyrings/* \
     ~/.bash_history
