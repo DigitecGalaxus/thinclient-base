@@ -57,6 +57,7 @@ RUN mkdir -p /etc/systemd/system/network.target.wants/ && \
 
 # Set sddm as display manager and install Plasma / Wayland as desktop environment & Disable x11 in sddm, use wayland instead
 RUN /bin/bash -c "debconf-set-selections <<< 'sddm shared/default-x-display-manager select sddm'" && \
+    apt-get -qq update && \
     apt-get -qq install -y kde-plasma-desktop plasma-workspace-wayland plasma-nm dolphin print-manager libglib2.0-dev locales kde-spectacle kcalc > /dev/null 2>&1 && \
     rm -f /usr/share/xsessions/plasma.desktop
 
