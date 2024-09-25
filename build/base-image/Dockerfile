@@ -30,7 +30,7 @@ RUN bash -c 'apt-get install -y -qq intel-microcode && \
     cp -r /tmp/linux-firmware/usr/share/doc/linux-firmware /usr/share/doc/ && \
     rm -rfv /tmp/linux-firmware > /dev/null 2>&1 && rm -fv *.deb' > /dev/null 2>&1
 
-RUN apt-get install -y -qq software-properties-common gnupg2 apt-utils wget ntp sudo vim syslog-ng earlyoom iputils-ping dnsutils traceroute ca-certificates conky-all openssh-server libxss1 zram-config > /dev/null 2>&1
+RUN apt-get install -y -qq software-properties-common gnupg2 apt-utils wget ntp sudo vim syslog-ng earlyoom iputils-ping dnsutils traceroute ca-certificates conky-all openssh-server libxss1 zram-config iproute2 isc-dhcp-client > /dev/null 2>&1
 
 # Setup default login
 RUN echo ubuntu:ubuntu | chpasswd
