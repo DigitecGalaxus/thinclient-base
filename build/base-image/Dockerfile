@@ -74,6 +74,10 @@ RUN rm -f /usr/share/dbus-1/services/org.kde.kwalletd5.service
 COPY --chown=root:root --chmod=755 ./zram-config/init-zram-swapping /usr/bin/init-zram-swapping
 COPY --chown=root:root --chmod=644 ./zram-config/zram-config.service /lib/systemd/system/zram-config.service
 
+# Set DHCP option to use the mac-based clientid instead of duid to avoid getting multiple IPs
+RUN sed -i -e 's/^duid$/#duid/' -e 's/^#clientid$/clientid/' /etc/dhcpcd.conf
+RUN sed -i -e 's/^#DUIDType=vendor$/DUIDType=link-layer/g' /etc/systemd/networkd.conf
+
 # This cleanup works, as we'll be copying the complete filesystem later, therefore omitting any files that would still exist in an underlying layer.
 # delete obsolete packages and any temporary state
 RUN apt-get -qq autoremove -y > /dev/null 2>&1 && apt-get -qq clean > /dev/null 2>&1  && \
