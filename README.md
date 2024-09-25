@@ -14,10 +14,6 @@ Conky displays informations about the current status of the thin client, includi
 
 The thin client gets a unique and recognizable hostname from the `hostname-changer.sh` script. The Hostname is set to `tc-{MACAddressCharacters}`.
 
-### Network
-
-The changes in the networks are small and only for aesthetics. When not applying the settings in the configuration, on runtime of the client, we get a message that no network adapter is connected (while it is working and connected).
-
 ### Restart
 
 A trigger is implemented for an automatic restart for the thin client. This should ensure, that a clean boot is done after a while and start freshly with an up-to-date system. The default such that the system reboots after one month during the night.

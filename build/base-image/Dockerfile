@@ -65,15 +65,10 @@ RUN /bin/bash -c "debconf-set-selections <<< 'sddm shared/default-x-display-mana
 # Install superimportant emojis & Uninstall packages we don't need
 RUN apt-get update -qq > /dev/null 2>&1 && \
     apt-get install -y -qq fonts-noto-color-emoji > /dev/null 2>&1 && \
-    apt-get remove -y -qq --purge kdeconnect partitionmanager xiterm+thai kaddressbook khelpcenter kmail kopete kwalletmanager korganizer okular sweeper dragonplayer juk pim-sieve-editor kwalletmanager gwenview imagemagick akregator konqueror plasma-discover gnome-shell gdm3 gnupg2 apt-utils cracklib-runtime > /dev/null 2>&1
+    apt-get remove -y -qq --purge kdeconnect partitionmanager xiterm+thai kaddressbook khelpcenter kmail kopete kwalletmanager korganizer okular sweeper dragonplayer juk pim-sieve-editor kwalletmanager gwenview imagemagick akregator konqueror plasma-discover gnome-shell gdm3 gnupg2 apt-utils cracklib-runtime network-manager-gnome knetworkmanager network-manager> /dev/null 2>&1
 
 # Prevent wallet / Key manager popups
 RUN rm -f /usr/share/dbus-1/services/org.kde.kwalletd5.service
-
-# Initialise Network Manager
-COPY ./network/NetworkManager.conf /etc/NetworkManager/NetworkManager.conf
-# This seems to be necessary for the network manager to recognize the default connection properly
-RUN mkdir -p /etc/NetworkManager/conf.d/ && touch /etc/NetworkManager/conf.d/10-globally-managed-devices.conf
 
 # Configure zram-swapping to save memory.
 COPY --chown=root:root --chmod=755 ./zram-config/init-zram-swapping /usr/bin/init-zram-swapping
