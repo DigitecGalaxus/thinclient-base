@@ -6,4 +6,4 @@ newHostname=tc-$mac
 echo "Setting hostname to $newHostname."
 sed -i "s/ubuntu/$newHostname/g" /etc/hosts
 sed -i "s/ubuntu/$newHostname/g" /etc/hostname
-hostnamectl set-hostname $newHostname
+hostnamectl set-hostname $newName
