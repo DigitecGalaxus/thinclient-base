@@ -2,6 +2,14 @@
 set -e -o pipefail
 # This script is used to build all artifacts needed to run netbooted thinclients: Docker images for further usage, kernel, initrd as well as the squashed rootfs
 
+function dockerImageExists {
+    if docker image inspect "$1" &> /dev/null; then
+        return 0
+    else
+        return 1
+    fi
+}
+
 function removeFileIfExists {
     fileName="$1"
     if [[ -f "$fileName" ]]; then
@@ -35,6 +43,19 @@ if [[ "$dockerCaching" == "false" || "$dockerCaching" == "False" ]]; then
 else
     echo "Info: Docker Caching is enabled."
     dockerCaching=""
+fi
+
+# Ensure required Docker images are available
+# Build squashfs-tools image if it doesn't exist
+if ! dockerImageExists "squashfs-tools:latest"; then
+    echo "Building squashfs-tools Docker image..."
+    docker build -t squashfs-tools:latest -f ../build-tools/Dockerfile.squashfs-tools ../build-tools/
+fi
+
+# Build jinja-templating image if it doesn't exist
+if ! dockerImageExists "jinja-templating:latest"; then
+    echo "Building jinja-templating Docker image..."
+    docker build -t jinja-templating:latest -f ../build-tools/Dockerfile.jinja-templating ../build-tools/
 fi
 
 # Setting the target docker image name
@@ -72,7 +93,6 @@ removeFileIfExists "./exported-artifacts/base.squashfs"
 
 # Name of the resulting squashfs file, e.g. 21-01-17-master-6d358edc.squashfs
 squashfsFile="$(pwd)"/exported-artifacts/base.squashfs
-
 tarFile="$(pwd)"/exported-artifacts/base.tar
 removeFileIfExists "$tarFile"
 
@@ -83,13 +103,12 @@ docker cp "$containerID:/" - >"$tarFile"
 docker rm -f "$containerID"
 
 echo "Starting to convert tar file to squashfs file - this will take a while..."
-
 removeFileIfExists "$squashfsFile"
 touch "$squashfsFile"
 squashfsContainerID=$(docker run -d -u "$(id -u)" \
     -v "$tarFile:/var/live/$tarFile" \
     -v "$squashfsFile:/var/live/newfilesystem.squashfs" \
-    dgpublicimagesprod.azurecr.io/planetexpress/squashfs-tools:latest /bin/sh -c "tar2sqfs --force --quiet newfilesystem.squashfs < /var/live/$tarFile")
+    squashfs-tools:latest /bin/sh -c "tar2sqfs --force --quiet newfilesystem.squashfs < /var/live/$tarFile")
 docker wait "$squashfsContainerID"
 docker rm -f "$squashfsContainerID"
 rm -f "$tarFile"

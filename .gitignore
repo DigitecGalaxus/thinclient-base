@@ -1,7 +1,7 @@
 *.iso
 *.tar
 tarball
-*squashfs*
+.squashfs*
 *id_rsa*
 *.ppk
 *.log
