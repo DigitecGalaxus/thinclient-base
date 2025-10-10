@@ -1,5 +1,5 @@
 # This Dockerfile does not follow some best-practices, as it's not intended to be used as a Docker image. We simply use Docker as an abstraction for creating the filesystem we need.
-FROM ubuntu:24.10
+FROM ubuntu:24.04
 
 # Set environment variables so apt installs packages non-interactively
 ENV DEBIAN_FRONTEND=noninteractive DEBIAN_PRIORITY=critical
@@ -8,10 +8,13 @@ ENV DEBIAN_FRONTEND=noninteractive DEBIAN_PRIORITY=critical
 COPY alternative-mirrors.list /etc/apt/sources.list.d/alternative-mirrors.list
 
 # Installing essential packages and fully upgrading the image.
-RUN apt-get update -qq > /dev/null 2>&1 && apt-get -qq -y full-upgrade > /dev/null 2>&1 && apt-get install -y -qq jq curl unminimize > /dev/null 2>&1
+RUN apt-get update -qq > /dev/null 2>&1 && apt-get -qq -y full-upgrade > /dev/null 2>&1 && apt-get install -y -qq jq curl unminimize software-properties-common > /dev/null 2>&1
 
 # Unminimize is needed such that the languages work properly within KDE.
 RUN yes | unminimize > /dev/null 2>&1
+
+# ADD KDE Plasma 6 PPA
+RUN add-apt-repository -y ppa:kubuntu-ppa/backports && apt-get update -qq > /dev/null 2>&1
 
 # Resolving the current stable kernel version via the metapackage "linux-image-generic" and installing it. Can be hardcoded if necessary.
 RUN apt-get install -y -qq $(apt-cache depends linux-image-generic | grep -P 'Depends:\s+linux-image-\d|Depends:\s+linux-modules-extra-' | cut -d ':' -f2 | tr -d "<> ") > /dev/null 2>&1
@@ -33,7 +36,7 @@ RUN bash -c 'apt-get install -y -qq intel-microcode && \
     cp -r /tmp/linux-firmware/usr/share/doc/linux-firmware /usr/share/doc/ && \
     rm -rfv /tmp/linux-firmware > /dev/null 2>&1 && rm -fv *.deb' > /dev/null 2>&1
 
-RUN apt-get install -y -qq software-properties-common gnupg2 apt-utils wget ntp sudo vim syslog-ng earlyoom iputils-ping dnsutils traceroute ca-certificates conky-all openssh-server libxss1 zram-config > /dev/null 2>&1
+RUN apt-get install -y -qq gnupg2 apt-utils wget ntp sudo vim syslog-ng earlyoom iputils-ping dnsutils traceroute ca-certificates conky-all openssh-server libxss1 zram-config > /dev/null 2>&1
 
 # Setup default login
 RUN echo ubuntu:ubuntu | chpasswd
@@ -59,19 +62,19 @@ COPY ./hostname/hostname-changer.service /etc/systemd/system/hostname-changer.se
 RUN mkdir -p /etc/systemd/system/network.target.wants/ && \
     ln -s /etc/systemd/system/hostname-changer.service /etc/systemd/system/network.target.wants/hostname-changer.service
 
-# Set sddm as display manager and install Plasma / Wayland as desktop environment & Disable x11 in sddm, use wayland instead
+# Set sddm as display manager and install Plasma 6 / Wayland as desktop environment & Disable x11 in sddm, use wayland instead
 RUN /bin/bash -c "debconf-set-selections <<< 'sddm shared/default-x-display-manager select sddm'" && \
     apt-get -qq update && \
-    apt-get -qq install -y kde-plasma-desktop plasma-workspace-wayland plasma-nm dolphin print-manager libglib2.0-dev locales kde-spectacle kcalc > /dev/null 2>&1 && \
+    apt-get -qq install -y kde-plasma-desktop plasma-workspace plasma-nm dolphin print-manager libglib2.0-dev locales kde-spectacle kcalc > /dev/null 2>&1 && \
     rm -f /usr/share/xsessions/plasma.desktop
 
 # Install superimportant emojis & Uninstall packages we don't need
 RUN apt-get update -qq > /dev/null 2>&1 && \
     apt-get install -y -qq fonts-noto-color-emoji > /dev/null 2>&1 && \
-    apt-get remove -y -qq --purge kdeconnect partitionmanager xiterm+thai kaddressbook khelpcenter kmail kopete kwalletmanager korganizer okular sweeper dragonplayer juk pim-sieve-editor kwalletmanager gwenview imagemagick akregator konqueror plasma-discover gnome-shell gdm3 gnupg2 apt-utils cracklib-runtime > /dev/null 2>&1
+    apt-get remove -y -qq --purge kdeconnect partitionmanager xiterm+thai kaddressbook khelpcenter kmail kwalletmanager korganizer okular sweeper dragonplayer juk pim-sieve-editor kwalletmanager gwenview imagemagick akregator konqueror plasma-discover gnome-shell gdm3 gnupg2 apt-utils cracklib-runtime > /dev/null 2>&1
 
 # Prevent wallet / Key manager popups
-RUN rm -f /usr/share/dbus-1/services/org.kde.kwalletd5.service
+RUN rm -f /usr/share/dbus-1/services/org.kde.kwalletd*.service
 
 # Initialise Network Manager
 COPY ./network/NetworkManager.conf /etc/NetworkManager/NetworkManager.conf
