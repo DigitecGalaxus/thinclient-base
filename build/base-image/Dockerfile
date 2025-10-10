@@ -14,7 +14,8 @@ RUN apt-get update -qq > /dev/null 2>&1 && apt-get -qq -y full-upgrade > /dev/nu
 RUN yes | unminimize > /dev/null 2>&1
 
 # ADD KDE Plasma 6 PPA
-RUN add-apt-repository -y ppa:kubuntu-ppa/backports && apt-get update -qq > /dev/null 2>&1
+RUN curl -s https://archive.neon.kde.org/public.key | gpg --dearmor | tee /usr/share/keyrings/neon-archive-keyring.gpg
+RUN echo "deb [signed-by=/usr/share/keyrings/neon-archive-keyring.gpg] http://archive.neon.kde.org/user noble main" | tee /etc/apt/sources.list.d/neon.list
 
 # Resolving the current stable kernel version via the metapackage "linux-image-generic" and installing it. Can be hardcoded if necessary.
 RUN apt-get install -y -qq $(apt-cache depends linux-image-generic | grep -P 'Depends:\s+linux-image-\d|Depends:\s+linux-modules-extra-' | cut -d ':' -f2 | tr -d "<> ") > /dev/null 2>&1
