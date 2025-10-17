@@ -8,14 +8,14 @@ ENV DEBIAN_FRONTEND=noninteractive DEBIAN_PRIORITY=critical
 COPY alternative-mirrors.list /etc/apt/sources.list.d/alternative-mirrors.list
 
 # Installing essential packages and fully upgrading the image.
-RUN apt-get update -qq > /dev/null 2>&1 && apt-get -qq -y full-upgrade > /dev/null 2>&1 && apt-get install -y -qq jq curl unminimize software-properties-common > /dev/null 2>&1
+RUN apt-get update -qq > /dev/null 2>&1 && apt-get -qq -y full-upgrade > /dev/null 2>&1 && apt-get install -y -qq jq wget curl unminimize software-properties-common > /dev/null 2>&1
+
+# Upgrade Plasma-Repos
+RUN wget -qO - 'http://archive.neon.kde.org/public.key' | gpg --dearmor | tee /etc/apt/trusted.gpg.d/neon-archive.gpg
+RUN apt-add-repository 'deb http://archive.neon.kde.org/unstable noble main'
 
 # Unminimize is needed such that the languages work properly within KDE.
 RUN yes | unminimize > /dev/null 2>&1
-
-# ADD KDE Plasma 6 PPA
-RUN curl -s https://archive.neon.kde.org/public.key | gpg --dearmor | tee /usr/share/keyrings/neon-archive-keyring.gpg
-RUN echo "deb [signed-by=/usr/share/keyrings/neon-archive-keyring.gpg] http://archive.neon.kde.org/user noble main" | tee /etc/apt/sources.list.d/neon.list
 
 # Resolving the current stable kernel version via the metapackage "linux-image-generic" and installing it. Can be hardcoded if necessary.
 RUN apt-get install -y -qq $(apt-cache depends linux-image-generic | grep -P 'Depends:\s+linux-image-\d|Depends:\s+linux-modules-extra-' | cut -d ':' -f2 | tr -d "<> ") > /dev/null 2>&1
