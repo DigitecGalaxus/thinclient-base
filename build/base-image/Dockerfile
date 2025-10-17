@@ -1,36 +1,25 @@
 # This Dockerfile does not follow some best-practices, as it's not intended to be used as a Docker image. We simply use Docker as an abstraction for creating the filesystem we need.
-FROM ubuntu:24.04
+FROM ghcr.io/rhino-linux/docker:latest
+
+# Ensure we're running as root for package installation
+USER root
 
 # Set environment variables so apt installs packages non-interactively
 ENV DEBIAN_FRONTEND=noninteractive DEBIAN_PRIORITY=critical
 
 # Installing essential packages and fully upgrading the image.
-RUN apt-get update -qq > /dev/null 2>&1 && apt-get -qq -y full-upgrade > /dev/null 2>&1 && apt-get install -y -qq jq curl unminimize > /dev/null 2>&1
+RUN apt-get update  && apt-get -y full-upgrade  && apt-get install -y jq curl unminimize 
 
 # Unminimize is needed such that the languages work properly within KDE.
-RUN yes | unminimize > /dev/null 2>&1
+RUN yes | unminimize 
 
 # Resolving the current stable kernel version via the metapackage "linux-image-generic" and installing it. Can be hardcoded if necessary.
-RUN apt-get install -y -qq $(apt-cache depends linux-image-generic | grep -P 'Depends:\s+linux-image-\d|Depends:\s+linux-modules-extra-' | cut -d ':' -f2 | tr -d "<> ") > /dev/null 2>&1
+RUN apt-get install -y $(apt-cache depends linux-image-generic | grep -P 'Depends:\s+linux-image-\d|Depends:\s+linux-modules-extra-' | cut -d ':' -f2 | tr -d "<> ") 
 
 # Installing additional firmware/drivers for Intel and AMD CPUs, GPUs, WiFi, and Bluetooth. Also copy documentation.
-RUN bash -c 'apt-get install -y -qq intel-microcode && \
-    apt-get install -y -qq amd64-microcode && \
-    apt-get download linux-firmware && \
-    dpkg -x *.deb /tmp/linux-firmware/ && \
-    mkdir /lib/firmware/i915/ && \
-    cp /tmp/linux-firmware/lib/firmware/i915/* /lib/firmware/i915/ && \
-    cp -r /tmp/linux-firmware/lib/firmware/iwlwifi-* /lib/firmware/ && \
-    mkdir /lib/firmware/intel/ && \ 
-    cp /tmp/linux-firmware/lib/firmware/intel/ibt-0041-0041* /lib/firmware/intel/ && \
-    cp /tmp/linux-firmware/lib/firmware/intel/ibt-19-0-4* /lib/firmware/intel/ && \
-    mkdir /lib/firmware/amdgpu/ && \ 
-    cp /tmp/linux-firmware/lib/firmware/amdgpu/raven* /lib/firmware/amdgpu/ && \
-    cp /tmp/linux-firmware/lib/firmware/amdgpu/polaris* /lib/firmware/amdgpu/ && \
-    cp -r /tmp/linux-firmware/usr/share/doc/linux-firmware /usr/share/doc/ && \
-    rm -rfv /tmp/linux-firmware > /dev/null 2>&1 && rm -fv *.deb' > /dev/null 2>&1
+RUN apt-get install -y intel-microcode amd64-microcode linux-firmware 
 
-RUN apt-get install -y -qq software-properties-common gnupg2 apt-utils wget ntp sudo vim syslog-ng earlyoom iputils-ping dnsutils traceroute ca-certificates conky-all openssh-server libxss1 zram-config > /dev/null 2>&1
+RUN apt-get install -y software-properties-common gnupg2 apt-utils wget openntpd sudo vim syslog-ng earlyoom iputils-ping bind9-dnsutils traceroute ca-certificates conky-all openssh-server libxss1 zram-config 
 
 # Setup default login
 RUN echo ubuntu:ubuntu | chpasswd
@@ -58,14 +47,14 @@ RUN mkdir -p /etc/systemd/system/network.target.wants/ && \
 
 # Set sddm as display manager and install Plasma / Wayland as desktop environment & Disable x11 in sddm, use wayland instead
 RUN /bin/bash -c "debconf-set-selections <<< 'sddm shared/default-x-display-manager select sddm'" && \
-    apt-get -qq update && \
-    apt-get -qq install -y kde-plasma-desktop plasma-workspace-wayland plasma-nm dolphin print-manager libglib2.0-dev locales kde-spectacle kcalc > /dev/null 2>&1 && \
+    apt-get update && \
+    apt-get install -y kde-plasma-desktop plasma-nm dolphin print-manager libglib2.0-dev locales kde-spectacle kcalc  && \
     rm -f /usr/share/xsessions/plasma.desktop
 
 # Install superimportant emojis & Uninstall packages we don't need
-RUN apt-get update -qq > /dev/null 2>&1 && \
-    apt-get install -y -qq fonts-noto-color-emoji > /dev/null 2>&1 && \
-    apt-get remove -y -qq --purge kdeconnect partitionmanager xiterm+thai kaddressbook khelpcenter kmail kopete kwalletmanager korganizer okular sweeper dragonplayer juk pim-sieve-editor kwalletmanager gwenview imagemagick akregator konqueror plasma-discover gnome-shell gdm3 gnupg2 apt-utils cracklib-runtime > /dev/null 2>&1
+RUN apt-get update  && \
+    apt-get install -y fonts-noto-color-emoji  && \
+    apt-get remove -y --purge kdeconnect partitionmanager xiterm+thai kaddressbook khelpcenter kmail kwalletmanager korganizer okular sweeper dragonplayer juk pim-sieve-editor kwalletmanager gwenview imagemagick akregator konqueror plasma-discover gnome-shell gdm3 gnupg2 apt-utils cracklib-runtime 
 
 # Prevent wallet / Key manager popups
 RUN rm -f /usr/share/dbus-1/services/org.kde.kwalletd5.service
@@ -81,7 +70,7 @@ COPY --chown=root:root --chmod=644 ./zram-config/zram-config.service /lib/system
 
 # This cleanup works, as we'll be copying the complete filesystem later, therefore omitting any files that would still exist in an underlying layer.
 # delete obsolete packages and any temporary state
-RUN apt-get -qq autoremove -y > /dev/null 2>&1 && apt-get -qq clean > /dev/null 2>&1  && \
+RUN apt-get autoremove -y  && apt-get clean   && \
     rm -rf \
     /tmp/* \
     /var/backups/* \
