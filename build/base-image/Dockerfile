@@ -4,6 +4,9 @@ FROM ubuntu:24.04
 # Set environment variables so apt installs packages non-interactively
 ENV DEBIAN_FRONTEND=noninteractive DEBIAN_PRIORITY=critical
 
+# Configure alternative apt mirrors for redundancy
+COPY alternative-mirrors.list /etc/apt/sources.list.d/alternative-mirrors.list
+
 # Installing essential packages and fully upgrading the image.
 RUN apt-get update -qq > /dev/null 2>&1 && apt-get -qq -y full-upgrade > /dev/null 2>&1 && apt-get install -y -qq jq curl unminimize > /dev/null 2>&1
 
