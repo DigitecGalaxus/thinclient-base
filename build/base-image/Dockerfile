@@ -12,7 +12,7 @@ RUN apt-get update -qq > /dev/null 2>&1 && apt-get -qq -y full-upgrade > /dev/nu
 
 # Upgrade Plasma-Repos
 RUN wget -qO - 'http://archive.neon.kde.org/public.key' | gpg --dearmor | tee /etc/apt/trusted.gpg.d/neon-archive.gpg
-RUN apt-add-repository 'deb http://archive.neon.kde.org/unstable noble main'
+RUN apt-add-repository 'deb http://archive.neon.kde.org/stable noble main'
 
 # Unminimize is needed such that the languages work properly within KDE.
 RUN yes | unminimize > /dev/null 2>&1
