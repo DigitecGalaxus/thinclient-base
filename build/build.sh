@@ -60,8 +60,8 @@ fi
 
 # Setting the target docker image name
 if [[ "$baseImageBranch" == "" ]]; then
-    baseImageBranch="main"
-    echo "Warning: No baseImageBranch passed. Using thinclient-base:$baseImageBranch to tag the image."
+    baseImageBranch="$(git rev-parse --abbrev-ref HEAD)"
+    echo "Warning: No baseImageBranch passed. Using current git branch: thinclient-base:$baseImageBranch to tag the image."
 fi
 
 # Strip everything before the last '/'

@@ -60,12 +60,14 @@ RUN mkdir -p /etc/systemd/system/network.target.wants/ && \
 RUN apt-get -qq update && \
     apt-get -qq install -y kde-plasma-desktop plasma-workspace plasma-nm dolphin print-manager libglib2.0-dev locales kde-spectacle kcalc gdm3 > /dev/null 2>&1 && \
     /bin/bash -c "debconf-set-selections <<< 'gdm3 shared/default-x-display-manager select gdm3'" && \
-    rm -f /usr/share/xsessions/plasma.desktop
+    rm -f /usr/share/xsessions/plasma.desktop && \
+    rm -f /usr/share/xsessions/ubuntu*.desktop /usr/share/wayland-sessions/ubuntu*.desktop
 
 # Install superimportant emojis & Uninstall packages we don't need
+# Note: gnome-shell must be kept as it's required by GDM3 for Himmelblau QR greeter
 RUN apt-get update -qq > /dev/null 2>&1 && \
     apt-get install -y -qq fonts-noto-color-emoji > /dev/null 2>&1 && \
-    apt-get remove -y -qq --purge kdeconnect partitionmanager xiterm+thai kaddressbook khelpcenter kmail kwalletmanager korganizer okular sweeper dragonplayer juk pim-sieve-editor kwalletmanager gwenview imagemagick akregator konqueror plasma-discover gnome-shell sddm gnupg2 apt-utils cracklib-runtime > /dev/null 2>&1
+    apt-get remove -y -qq --purge kdeconnect partitionmanager xiterm+thai kaddressbook khelpcenter kmail kwalletmanager korganizer okular sweeper dragonplayer juk pim-sieve-editor kwalletmanager gwenview imagemagick akregator konqueror plasma-discover sddm gnupg2 apt-utils cracklib-runtime > /dev/null 2>&1
 
 # Prevent wallet / Key manager popups
 RUN rm -f /usr/share/dbus-1/services/org.kde.kwalletd5.service
