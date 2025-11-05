@@ -76,7 +76,7 @@ docker image build --progress=plain $dockerCaching -t "thinclient-base:$baseImag
 # If you want to export the artifacts on this stage, run ./build.sh exportSquashFS="true"
 if [[ "$exportBootArtifacts" == "true" ]]; then
     echo "Purging old boot artifacts before starting a new build..."
-    removeFileIfExists "./exported-artifacts/initrd.img"
+    removeFileIfExists "./exported-artifacts/initrd"
     removeFileIfExists "./exported-artifacts/vmlinuz"
     # Running the bootartifacts docker build and exporting them directly.
     DOCKER_BUILDKIT=1 docker image build --progress=plain --build-arg BASEIMAGE=thinclient-base:$baseImageBranch --output ./exported-artifacts ./bootartifacts
