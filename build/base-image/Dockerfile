@@ -74,6 +74,9 @@ RUN apt-get update -qq > /dev/null 2>&1 && \
     apt-get install -y -qq fonts-noto-color-emoji > /dev/null 2>&1 && \
     apt-get remove -y -qq --purge kdeconnect partitionmanager xiterm+thai kaddressbook khelpcenter kmail kwalletmanager korganizer okular sweeper dragonplayer juk pim-sieve-editor kwalletmanager gwenview imagemagick akregator konqueror plasma-discover gnome-shell gdm3 gnupg2 apt-utils cracklib-runtime > /dev/null 2>&1
 
+# Remove KDE Neon repository - not used by unattended-upgrades, updates come with new image builds
+RUN rm -f /etc/apt/sources.list.d/neon.list /etc/apt/trusted.gpg.d/neon-archive.gpg
+
 # Prevent wallet / Key manager popups
 RUN rm -f /usr/share/dbus-1/services/org.kde.kwalletd*.service
 
