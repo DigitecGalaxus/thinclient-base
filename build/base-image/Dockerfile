@@ -1,5 +1,5 @@
 # This Dockerfile does not follow some best-practices, as it's not intended to be used as a Docker image. We simply use Docker as an abstraction for creating the filesystem we need.
-FROM ubuntu:24.04
+FROM ubuntu:25.10
 
 # Set environment variables so apt installs packages non-interactively
 ENV DEBIAN_FRONTEND=noninteractive DEBIAN_PRIORITY=critical
@@ -11,8 +11,7 @@ COPY alternative-mirrors.list /etc/apt/sources.list.d/alternative-mirrors.list
 RUN apt-get update -qq > /dev/null 2>&1 && apt-get -qq -y full-upgrade > /dev/null 2>&1 && apt-get install -y -qq jq wget curl unminimize software-properties-common > /dev/null 2>&1
 
 # Upgrade Plasma-Repos
-RUN wget -qO - 'https://archive.neon.kde.org/public.key' | gpg --dearmor | tee /etc/apt/trusted.gpg.d/neon-archive.gpg
-RUN apt-add-repository 'deb https://archive.neon.kde.org/stable noble main'
+RUN add-apt-repository ppa:kubuntu-ppa/backports
 
 # Unminimize is needed such that the languages work properly within KDE.
 RUN yes | unminimize > /dev/null 2>&1
