@@ -8,7 +8,7 @@ ENV DEBIAN_FRONTEND=noninteractive DEBIAN_PRIORITY=critical
 COPY alternative-mirrors.list /etc/apt/sources.list.d/alternative-mirrors.list
 
 # Install essential packages
-RUN apt-get install -y -qq jq wget curl unminimize software-properties-common > /dev/null 2>&1
+RUN apt-get update -qq > /dev/null 2>&1 && apt-get install -y -qq jq wget curl unminimize software-properties-common > /dev/null 2>&1
 
 # Upgrade Plasma-Repos
 RUN add-apt-repository ppa:kubuntu-ppa/backports
