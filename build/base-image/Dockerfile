@@ -7,11 +7,14 @@ ENV DEBIAN_FRONTEND=noninteractive DEBIAN_PRIORITY=critical
 # Configure alternative apt mirrors for redundancy
 COPY alternative-mirrors.list /etc/apt/sources.list.d/alternative-mirrors.list
 
+# Install essential packages
+RUN apt-get install -y -qq jq wget curl unminimize software-properties-common > /dev/null 2>&1
+
 # Upgrade Plasma-Repos
 RUN add-apt-repository ppa:kubuntu-ppa/backports
 
-# Installing essential packages and fully upgrading the image.
-RUN apt-get update -qq > /dev/null 2>&1 && apt-get -qq -y full-upgrade > /dev/null 2>&1 && apt-get install -y -qq jq wget curl unminimize software-properties-common > /dev/null 2>&1
+# Fully upgrading the image
+RUN apt-get update -qq > /dev/null 2>&1 && apt-get -qq -y full-upgrade > /dev/null 2>&1
 
 # Unminimize is needed such that the languages work properly within KDE.
 RUN yes | unminimize > /dev/null 2>&1
