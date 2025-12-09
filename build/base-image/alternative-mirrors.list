@@ -1,7 +1,7 @@
 # Alternative mirrors (fallback)
-deb http://mirror.init7.net/ubuntu/ noble main restricted universe multiverse
-deb http://mirror.init7.net/ubuntu/ noble-updates main restricted universe multiverse
-deb http://mirror.init7.net/ubuntu/ noble-backports main restricted universe multiverse
-deb http://mirror.switch.ch/ftp/ubuntu/ noble main restricted universe multiverse
-deb http://mirror.switch.ch/ftp/ubuntu/ noble-updates main restricted universe multiverse
-deb http://mirror.switch.ch/ftp/ubuntu/ noble-backports main restricted universe multiverse
+deb http://mirror.init7.net/ubuntu/ questing main restricted universe multiverse
+deb http://mirror.init7.net/ubuntu/ questing-updates main restricted universe multiverse
+deb http://mirror.init7.net/ubuntu/ questing-backports main restricted universe multiverse
+deb http://mirror.switch.ch/ftp/ubuntu/ questing main restricted universe multiverse
+deb http://mirror.switch.ch/ftp/ubuntu/ questing-updates main restricted universe multiverse
+deb http://mirror.switch.ch/ftp/ubuntu/ questing-backports main restricted universe multiverse
