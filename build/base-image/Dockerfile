@@ -64,10 +64,8 @@ COPY ./hostname/hostname-changer.service /etc/systemd/system/hostname-changer.se
 RUN mkdir -p /etc/systemd/system/network.target.wants/ && \
     ln -s /etc/systemd/system/hostname-changer.service /etc/systemd/system/network.target.wants/hostname-changer.service
 
-# Set gdm3 as display manager and install GNOME as desktop environment
-RUN /bin/bash -c "debconf-set-selections <<< 'gdm3 shared/default-x-display-manager select gdm3'" && \
-    apt-get -qq update && \
-    apt-get -qq install -y gnome-shell gnome-session gnome-terminal nautilus gnome-control-center gnome-system-monitor gnome-calculator gnome-screenshot network-manager-gnome system-config-printer libglib2.0-dev locales gdm3 > /dev/null 2>&1
+# Install GNOME as desktop environment
+RUN apt-get -qq update && apt-get -qq install -y gnome-shell gnome-session gnome-terminal nautilus gnome-control-center gnome-system-monitor gnome-calculator gnome-screenshot network-manager-gnome system-config-printer libglib2.0-dev locales gdm3 > /dev/null 2>&1
 
 # Install superimportant emojis & Uninstall packages we don't need
 RUN apt-get update -qq > /dev/null 2>&1 && \
