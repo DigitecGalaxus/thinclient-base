@@ -56,8 +56,7 @@ RUN mkdir -p /etc/systemd/system/network.target.wants/ && \
     ln -s /etc/systemd/system/hostname-changer.service /etc/systemd/system/network.target.wants/hostname-changer.service
 
 # Install GNOME as desktop environment
-# ubuntu-session is required for user switching UI to appear in GNOME Shell
-RUN apt-get -qq update && apt-get -qq install -y gnome-shell gnome-session ubuntu-session gnome-terminal nautilus gnome-control-center gnome-system-monitor gnome-calculator gnome-screenshot network-manager-gnome system-config-printer libglib2.0-dev locales gdm3 caribou fonts-noto-color-emoji dconf-cli dconf-gsettings-backend > /dev/null 2>&1
+RUN apt-get -qq update && apt-get -qq install -y gnome-shell gnome-session gnome-terminal nautilus gnome-control-center gnome-system-monitor gnome-calculator gnome-screenshot network-manager-gnome system-config-printer libglib2.0-dev locales gdm3 caribou fonts-noto-color-emoji dconf-cli dconf-gsettings-backend > /dev/null 2>&1
 
 # Prevent GNOME keyring prompts for auto-login scenarios (optional)
 # RUN rm -f /usr/share/dbus-1/services/org.gnome.keyring*.service
