@@ -1,5 +1,5 @@
 # This Dockerfile does not follow some best-practices, as it's not intended to be used as a Docker image. We simply use Docker as an abstraction for creating the filesystem we need.
-FROM ubuntu:25.10
+FROM ubuntu:24.04
 
 # Set environment variables so apt installs packages non-interactively
 ENV DEBIAN_FRONTEND=noninteractive DEBIAN_PRIORITY=critical
@@ -7,14 +7,12 @@ ENV DEBIAN_FRONTEND=noninteractive DEBIAN_PRIORITY=critical
 # Configure alternative apt mirrors for redundancy
 COPY alternative-mirrors.list /etc/apt/sources.list.d/alternative-mirrors.list
 
-# Install essential packages
-RUN apt-get update -qq > /dev/null 2>&1 && apt-get install -y -qq jq wget curl unminimize software-properties-common > /dev/null 2>&1
+# Installing essential packages and fully upgrading the image.
+RUN apt-get update -qq > /dev/null 2>&1 && apt-get -qq -y full-upgrade > /dev/null 2>&1 && apt-get install -y -qq jq wget curl unminimize software-properties-common > /dev/null 2>&1
 
 # Upgrade Plasma-Repos
-RUN add-apt-repository ppa:kubuntu-ppa/backports
-
-# Fully upgrading the image
-RUN apt-get update -qq > /dev/null 2>&1 && apt-get -qq -y full-upgrade > /dev/null 2>&1
+RUN wget -qO - 'https://archive.neon.kde.org/public.key' | gpg --dearmor | tee /etc/apt/trusted.gpg.d/neon-archive.gpg
+RUN apt-add-repository 'deb https://archive.neon.kde.org/stable noble main'
 
 # Unminimize is needed such that the languages work properly within KDE.
 RUN yes | unminimize > /dev/null 2>&1
@@ -28,14 +26,14 @@ RUN bash -c 'apt-get install -y -qq intel-microcode && \
     apt-get download linux-firmware && \
     dpkg -x *.deb /tmp/linux-firmware/ && \
     mkdir /lib/firmware/i915/ && \
-    cp /tmp/linux-firmware/usr/lib/firmware/i915/* /lib/firmware/i915/ && \
-    cp -r /tmp/linux-firmware/usr/lib/firmware/iwlwifi-* /lib/firmware/ && \
+    cp /tmp/linux-firmware/lib/firmware/i915/* /lib/firmware/i915/ && \
+    cp -r /tmp/linux-firmware/lib/firmware/iwlwifi-* /lib/firmware/ && \
     mkdir /lib/firmware/intel/ && \ 
-    cp /tmp/linux-firmware/usr/lib/firmware/intel/ibt-0041-0041* /lib/firmware/intel/ && \
-    cp /tmp/linux-firmware/usr/lib/firmware/intel/ibt-19-0-4* /lib/firmware/intel/ && \
+    cp /tmp/linux-firmware/lib/firmware/intel/ibt-0041-0041* /lib/firmware/intel/ && \
+    cp /tmp/linux-firmware/lib/firmware/intel/ibt-19-0-4* /lib/firmware/intel/ && \
     mkdir /lib/firmware/amdgpu/ && \ 
-    cp /tmp/linux-firmware/usr/lib/firmware/amdgpu/raven* /lib/firmware/amdgpu/ && \
-    cp /tmp/linux-firmware/usr/lib/firmware/amdgpu/polaris* /lib/firmware/amdgpu/ && \
+    cp /tmp/linux-firmware/lib/firmware/amdgpu/raven* /lib/firmware/amdgpu/ && \
+    cp /tmp/linux-firmware/lib/firmware/amdgpu/polaris* /lib/firmware/amdgpu/ && \
     cp -r /tmp/linux-firmware/usr/share/doc/linux-firmware /usr/share/doc/ && \
     rm -rfv /tmp/linux-firmware > /dev/null 2>&1 && rm -fv *.deb' > /dev/null 2>&1
 
