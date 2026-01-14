@@ -1,5 +1,5 @@
 # This Dockerfile does not follow some best-practices, as it's not intended to be used as a Docker image. We simply use Docker as an abstraction for creating the filesystem we need.
-FROM ubuntu:25.10
+FROM ubuntu:24.04
 
 # Set environment variables so apt installs packages non-interactively
 ENV DEBIAN_FRONTEND=noninteractive DEBIAN_PRIORITY=critical
@@ -14,6 +14,9 @@ RUN apt-get update -qq > /dev/null 2>&1 && apt-get -qq -y full-upgrade > /dev/nu
 RUN apt-get update -qq > /dev/null 2>&1 && \
     apt-get install -y -qq jq wget curl software-properties-common > /dev/null 2>&1 && \
     apt-get install -y -qq gnupg2 apt-utils wget sudo vim syslog-ng earlyoom iputils-ping dnsutils traceroute ca-certificates conky-all openssh-server libxss1 zram-config > /dev/null 2>&1
+
+# Unminimize is needed such that the languages work properly within KDE.
+RUN yes | unminimize > /dev/null 2>&1
 
 # Resolving the current stable kernel version via the metapackage "linux-image-generic" and installing it. Can be hardcoded if necessary.
 RUN apt-get install -y -qq $(apt-cache depends linux-image-generic | grep -P 'Depends:\s+linux-image-\d|Depends:\s+linux-modules-extra-' | cut -d ':' -f2 | tr -d "<> ") > /dev/null 2>&1
