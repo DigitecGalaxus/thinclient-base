@@ -47,6 +47,7 @@ RUN echo "session optional pam_mkhomedir.so umask=0077" >> /etc/pam.d/common-ses
 # Conky - program to display stats on desktop
 COPY ./conky/conky.conf /etc/conky/conky.conf
 COPY ./conky/conky.desktop /etc/xdg/autostart/conky.desktop
+COPY ./conky/conky_start.sh /usr/local/share/scripts/conky_start.sh
 
 # Add automatic Shutdown Trigger after a specified time defined in the restart.service file.
 COPY ./restart/restart.service /etc/systemd/system/restart.service
