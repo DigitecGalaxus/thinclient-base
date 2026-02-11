@@ -1,5 +1,7 @@
 [Desktop Entry]
 Name=conky
 Type=Application
-Exec=/usr/bin/conky
+Exec=/usr/local/share/scripts/conky_start.sh
 Terminal=false
+X-GNOME-Autostart-enabled=true
+X-GNOME-Autostart-Delay=5

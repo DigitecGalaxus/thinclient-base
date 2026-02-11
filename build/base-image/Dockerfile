@@ -12,12 +12,13 @@ RUN rm -f /etc/apt/sources.list.d/ubuntu.sources
 COPY mirrors.list /etc/apt/mirrors.list
 COPY alternative-mirrors.list /etc/apt/sources.list.d/alternative-mirrors.list
 
-# Installing essential packages and fully upgrading the image.
-RUN apt-get update -qq > /dev/null 2>&1 && apt-get -qq -y full-upgrade > /dev/null 2>&1 && apt-get install -y -qq jq wget curl unminimize software-properties-common > /dev/null 2>&1
+# Fully upgrading the image
+RUN apt-get update -qq > /dev/null 2>&1 && apt-get -qq -y full-upgrade > /dev/null 2>&1
 
-# Upgrade Plasma-Repos
-RUN wget -qO - 'https://archive.neon.kde.org/public.key' | gpg --dearmor | tee /etc/apt/trusted.gpg.d/neon-archive.gpg
-RUN apt-add-repository 'deb https://archive.neon.kde.org/stable noble main'
+# Install essential packages
+RUN apt-get update -qq > /dev/null 2>&1 && \
+    apt-get install -y -qq jq wget curl software-properties-common > /dev/null 2>&1 && \
+    apt-get install -y -qq gnupg2 apt-utils wget sudo vim syslog-ng earlyoom iputils-ping dnsutils traceroute ca-certificates conky-all openssh-server libxss1 zram-config > /dev/null 2>&1
 
 # Unminimize is needed such that the languages work properly within KDE.
 RUN yes | unminimize > /dev/null 2>&1
@@ -31,18 +32,16 @@ RUN bash -c 'apt-get install -y -qq intel-microcode && \
     apt-get download linux-firmware && \
     dpkg -x *.deb /tmp/linux-firmware/ && \
     mkdir /lib/firmware/i915/ && \
-    cp /tmp/linux-firmware/lib/firmware/i915/* /lib/firmware/i915/ && \
-    cp -r /tmp/linux-firmware/lib/firmware/iwlwifi-* /lib/firmware/ && \
+    cp /tmp/linux-firmware/usr/lib/firmware/i915/* /lib/firmware/i915/ && \
+    cp -r /tmp/linux-firmware/usr/lib/firmware/iwlwifi-* /lib/firmware/ && \
     mkdir /lib/firmware/intel/ && \ 
-    cp /tmp/linux-firmware/lib/firmware/intel/ibt-0041-0041* /lib/firmware/intel/ && \
-    cp /tmp/linux-firmware/lib/firmware/intel/ibt-19-0-4* /lib/firmware/intel/ && \
+    cp /tmp/linux-firmware/usr/lib/firmware/intel/ibt-0041-0041* /lib/firmware/intel/ && \
+    cp /tmp/linux-firmware/usr/lib/firmware/intel/ibt-19-0-4* /lib/firmware/intel/ && \
     mkdir /lib/firmware/amdgpu/ && \ 
-    cp /tmp/linux-firmware/lib/firmware/amdgpu/raven* /lib/firmware/amdgpu/ && \
-    cp /tmp/linux-firmware/lib/firmware/amdgpu/polaris* /lib/firmware/amdgpu/ && \
+    cp /tmp/linux-firmware/usr/lib/firmware/amdgpu/raven* /lib/firmware/amdgpu/ && \
+    cp /tmp/linux-firmware/usr/lib/firmware/amdgpu/polaris* /lib/firmware/amdgpu/ && \
     cp -r /tmp/linux-firmware/usr/share/doc/linux-firmware /usr/share/doc/ && \
     rm -rfv /tmp/linux-firmware > /dev/null 2>&1 && rm -fv *.deb' > /dev/null 2>&1
-
-RUN apt-get install -y -qq gnupg2 apt-utils wget ntp sudo vim syslog-ng earlyoom iputils-ping dnsutils traceroute ca-certificates conky-all openssh-server libxss1 zram-config > /dev/null 2>&1
 
 # Setup default login
 RUN echo ubuntu:ubuntu | chpasswd
@@ -53,14 +52,11 @@ RUN echo "session optional pam_mkhomedir.so umask=0077" >> /etc/pam.d/common-ses
 # Conky - program to display stats on desktop
 COPY ./conky/conky.conf /etc/conky/conky.conf
 COPY ./conky/conky.desktop /etc/xdg/autostart/conky.desktop
+COPY ./conky/conky_start.sh /usr/local/share/scripts/conky_start.sh
 
 # Add automatic Shutdown Trigger after a specified time defined in the restart.service file.
 COPY ./restart/restart.service /etc/systemd/system/restart.service
 RUN ln -s /etc/systemd/system/restart.service /etc/systemd/system/multi-user.target.wants/restart.service
-
-# Add auto-enable of middle-mouse-clicks for generic devices.
-COPY ./scrolling/mouse_scrolling.desktop /etc/skel/.config/autostart/mouse_scrolling.desktop
-COPY ./scrolling/middle_click_to_scroll.sh /usr/local/share/scripts/middle_click_to_scroll.sh
 
 # Add hostname renaming service including systemd configuration.
 COPY ./hostname/hostname-changer.sh /usr/local/share/scripts/hostname-changer.sh
@@ -68,24 +64,16 @@ COPY ./hostname/hostname-changer.service /etc/systemd/system/hostname-changer.se
 RUN mkdir -p /etc/systemd/system/network.target.wants/ && \
     ln -s /etc/systemd/system/hostname-changer.service /etc/systemd/system/network.target.wants/hostname-changer.service
 
-# Set sddm as display manager and install Plasma 6 / Wayland as desktop environment & Disable x11 in sddm, use wayland instead
-RUN /bin/bash -c "debconf-set-selections <<< 'sddm shared/default-x-display-manager select sddm'" && \
-    apt-get -qq update && \
-    apt-get -qq install -y kde-plasma-desktop plasma-workspace plasma-nm dolphin print-manager libglib2.0-dev locales kde-spectacle kcalc maliit-keyboard > /dev/null 2>&1 && \
-    rm -f /usr/share/xsessions/plasma.desktop
+# Install GNOME as desktop environment
+RUN apt-get -qq update && apt-get -qq install -y gnome-shell gnome-session gnome-terminal nautilus gnome-control-center gnome-system-monitor gnome-calculator gnome-screenshot network-manager-gnome system-config-printer libglib2.0-dev locales gdm3 caribou fonts-noto-color-emoji dconf-cli dconf-gsettings-backend > /dev/null 2>&1
 
-# Install superimportant emojis & Uninstall packages we don't need
-RUN apt-get update -qq > /dev/null 2>&1 && \
-    apt-get install -y -qq fonts-noto-color-emoji > /dev/null 2>&1 && \
-    apt-get remove -y -qq --purge kdeconnect partitionmanager xiterm+thai kaddressbook khelpcenter kmail kwalletmanager korganizer okular sweeper dragonplayer juk pim-sieve-editor kwalletmanager gwenview imagemagick akregator konqueror plasma-discover gnome-shell gdm3 gnupg2 apt-utils cracklib-runtime > /dev/null 2>&1
-
-# Prevent wallet / Key manager popups
-RUN rm -f /usr/share/dbus-1/services/org.kde.kwalletd*.service
+# Prevent GNOME keyring prompts for auto-login scenarios (optional)
+# RUN rm -f /usr/share/dbus-1/services/org.gnome.keyring*.service
 
 # Initialise Network Manager
-COPY ./network/NetworkManager.conf /etc/NetworkManager/NetworkManager.conf
+# COPY ./network/NetworkManager.conf /etc/NetworkManager/NetworkManager.conf
 # This seems to be necessary for the network manager to recognize the default connection properly
-RUN mkdir -p /etc/NetworkManager/conf.d/ && touch /etc/NetworkManager/conf.d/10-globally-managed-devices.conf
+# RUN mkdir -p /etc/NetworkManager/conf.d/ && touch /etc/NetworkManager/conf.d/10-globally-managed-devices.conf
 
 # Configure zram-swapping to save memory.
 COPY --chown=root:root --chmod=755 ./zram-config/init-zram-swapping /usr/bin/init-zram-swapping

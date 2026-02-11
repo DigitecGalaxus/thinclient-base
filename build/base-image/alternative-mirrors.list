@@ -1,5 +1,5 @@
 # Apt mirrors with fallback: init7 -> switch.ch -> archive.ubuntu.com
-deb mirror+file:/etc/apt/mirrors.list noble main restricted universe multiverse
-deb mirror+file:/etc/apt/mirrors.list noble-updates main restricted universe multiverse
-deb mirror+file:/etc/apt/mirrors.list noble-backports main restricted universe multiverse
-deb http://security.ubuntu.com/ubuntu noble-security main restricted universe multiverse
+deb mirror+file:/etc/apt/mirrors.list questing main restricted universe multiverse
+deb mirror+file:/etc/apt/mirrors.list questing-updates main restricted universe multiverse
+deb mirror+file:/etc/apt/mirrors.list questing-backports main restricted universe multiverse
+deb http://security.ubuntu.com/ubuntu questing-security main restricted universe multiverse
