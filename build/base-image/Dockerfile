@@ -27,8 +27,9 @@ RUN yes | unminimize > /dev/null 2>&1
 RUN apt-get install -y -qq $(apt-cache depends linux-image-generic | grep -P 'Depends:\s+linux-image-\d|Depends:\s+linux-modules-extra-' | cut -d ':' -f2 | tr -d "<> ") > /dev/null 2>&1
 
 # Installing additional firmware/drivers for Intel and AMD CPUs, GPUs, WiFi, and Bluetooth.
-# Bluetooth firmware: ibt-0041 (AX210), ibt-19 (AX201), ibt-0093 (AX211), ibt-17 (9460/9560 JfP), ibt-20 (AX200), qca (QCA9377).
-RUN bash -c 'apt-get install -y -qq intel-microcode && \
+# Bluetooth firmware: ibt-0041 (AX210), ibt-19 (AX201), ibt-0093 (AX211), ibt-1040 (AX211 rev), ibt-17 (9460/9560 JfP), ibt-20 (AX200), qca (QCA9377).
+RUN bash -c 'apt-get update -qq > /dev/null 2>&1 && \
+    apt-get install -y -qq intel-microcode && \
     apt-get install -y -qq amd64-microcode && \
     apt-get download linux-firmware && \
     dpkg -x *.deb /tmp/linux-firmware/ && \
@@ -39,6 +40,7 @@ RUN bash -c 'apt-get install -y -qq intel-microcode && \
     cp /tmp/linux-firmware/usr/lib/firmware/intel/ibt-0041-0041* /lib/firmware/intel/ && \
     cp /tmp/linux-firmware/usr/lib/firmware/intel/ibt-19-0-4* /lib/firmware/intel/ && \
     cp /tmp/linux-firmware/usr/lib/firmware/intel/ibt-0093-* /lib/firmware/intel/ && \
+    cp /tmp/linux-firmware/usr/lib/firmware/intel/ibt-1040-* /lib/firmware/intel/ && \
     cp /tmp/linux-firmware/usr/lib/firmware/intel/ibt-17-* /lib/firmware/intel/ && \
     cp /tmp/linux-firmware/usr/lib/firmware/intel/ibt-20-* /lib/firmware/intel/ && \
     mkdir /lib/firmware/qca/ && \
