@@ -5,9 +5,10 @@ FROM ubuntu:24.04
 ENV DEBIAN_FRONTEND=noninteractive DEBIAN_PRIORITY=critical
 
 # Configure apt to retry on transient mirror errors
-RUN echo 'Acquire::Retries "3";' > /etc/apt/apt.conf.d/80-retries
+RUN echo 'Acquire::Retries "3";' > /etc/apt/apt.conf.d/80-retries && \
+    echo 'Acquire::http::Timeout "10";' >> /etc/apt/apt.conf.d/80-retries
 
-# Replace default Ubuntu sources with mirror fallback chain (init7 -> switch.ch -> archive.ubuntu.com)
+# Replace default Ubuntu sources with mirror fallback chain (init7 -> switch.ch -> archive.ubuntu.com, 10s timeout)
 RUN rm -f /etc/apt/sources.list.d/ubuntu.sources
 COPY mirrors.list /etc/apt/mirrors.list
 COPY alternative-mirrors.list /etc/apt/sources.list.d/alternative-mirrors.list
