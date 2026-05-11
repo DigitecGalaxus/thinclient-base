@@ -1,5 +1,5 @@
 # This Dockerfile does not follow some best-practices, as it's not intended to be used as a Docker image. We simply use Docker as an abstraction for creating the filesystem we need.
-FROM ubuntu:24.04
+FROM ubuntu:26.04
 
 # Set environment variables so apt installs packages non-interactively
 ENV DEBIAN_FRONTEND=noninteractive DEBIAN_PRIORITY=critical
@@ -11,7 +11,7 @@ RUN echo 'Acquire::Retries "3";' > /etc/apt/apt.conf.d/80-retries && \
 # Replace default Ubuntu sources with mirror fallback chain (init7 -> switch.ch, 10s timeout)
 RUN rm -f /etc/apt/sources.list.d/ubuntu.sources
 COPY mirrors.list /etc/apt/mirrors.list
-COPY alternative-mirrors.list /etc/apt/sources.list.d/alternative-mirrors.list
+COPY alternative-mirrors.sources /etc/apt/sources.list.d/alternative-mirrors.sources
 
 # Fully upgrading the image
 RUN apt-get update -qq > /dev/null 2>&1 && apt-get -qq -y full-upgrade > /dev/null 2>&1
