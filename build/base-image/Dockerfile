@@ -22,31 +22,14 @@ RUN apt-get update -qq > /dev/null 2>&1 && \
     apt-get install -y -qq gnupg2 apt-utils wget sudo vim syslog-ng earlyoom iputils-ping dnsutils traceroute ca-certificates conky-all openssh-server libxss1 zram-config > /dev/null 2>&1
 
 # Unminimize is needed such that the languages work properly within KDE.
-RUN yes | unminimize > /dev/null 2>&1
+RUN apt-get install -y -qq unminimize > /dev/null 2>&1 && yes | unminimize > /dev/null 2>&1
 
 # Resolving the current stable kernel version via the metapackage "linux-image-generic" and installing it. Can be hardcoded if necessary.
 RUN apt-get install -y -qq $(apt-cache depends linux-image-generic | grep -P 'Depends:\s+linux-image-\d|Depends:\s+linux-modules-extra-' | cut -d ':' -f2 | tr -d "<> ") > /dev/null 2>&1
 
 # Installing additional firmware/drivers for Intel and AMD CPUs, GPUs, WiFi, and Bluetooth.
-# Bluetooth firmware: all Intel ibt-* (covers AX200/AX201/AX210/AX211 and future chipsets, ~14 MB) plus qca (QCA9377).
-RUN bash -c 'apt-get update -qq > /dev/null 2>&1 && \
-    apt-get install -y -qq intel-microcode && \
-    apt-get install -y -qq amd64-microcode && \
-    apt-get download linux-firmware && \
-    dpkg -x *.deb /tmp/linux-firmware/ && \
-    mkdir /lib/firmware/i915/ && \
-    cp /tmp/linux-firmware/usr/lib/firmware/i915/* /lib/firmware/i915/ && \
-    cp -r /tmp/linux-firmware/usr/lib/firmware/iwlwifi-* /lib/firmware/ && \
-    mkdir /lib/firmware/intel/ && \
-    cp /tmp/linux-firmware/usr/lib/firmware/intel/ibt-* /lib/firmware/intel/ && \
-    mkdir /lib/firmware/qca/ && \
-    cp /tmp/linux-firmware/usr/lib/firmware/qca/rampatch_usb_* /lib/firmware/qca/ && \
-    cp /tmp/linux-firmware/usr/lib/firmware/qca/nvm_usb_* /lib/firmware/qca/ && \
-    mkdir /lib/firmware/amdgpu/ && \ 
-    cp /tmp/linux-firmware/usr/lib/firmware/amdgpu/raven* /lib/firmware/amdgpu/ && \
-    cp /tmp/linux-firmware/usr/lib/firmware/amdgpu/polaris* /lib/firmware/amdgpu/ && \
-    cp -r /tmp/linux-firmware/usr/share/doc/linux-firmware /usr/share/doc/ && \
-    rm -rfv /tmp/linux-firmware > /dev/null 2>&1 && rm -fv *.deb' > /dev/null 2>&1
+# linux-firmware was split into subpackages in Ubuntu 26.04; install only what thin clients need.
+RUN apt-get update -qq > /dev/null 2>&1 && apt-get install -y -qq intel-microcode amd64-microcode linux-firmware-intel-graphics linux-firmware-intel-wireless linux-firmware-qualcomm-wireless linux-firmware-amd-graphics > /dev/null 2>&1
 
 # Setup default login
 RUN echo ubuntu:ubuntu | chpasswd
