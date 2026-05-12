@@ -19,7 +19,7 @@ RUN apt-get update -qq > /dev/null 2>&1 && apt-get -qq -y full-upgrade > /dev/nu
 # Install essential packages
 RUN apt-get update -qq > /dev/null 2>&1 && \
     apt-get install -y -qq jq wget curl software-properties-common > /dev/null 2>&1 && \
-    apt-get install -y -qq gnupg2 apt-utils wget sudo vim syslog-ng earlyoom iputils-ping dnsutils traceroute ca-certificates conky-all openssh-server libxss1 zram-config > /dev/null 2>&1
+    apt-get install -y -qq gnupg2 apt-utils wget sudo vim syslog-ng earlyoom iputils-ping dnsutils traceroute ca-certificates openssh-server libxss1 zram-config > /dev/null 2>&1
 
 # Unminimize is needed such that the languages work properly within KDE.
 RUN apt-get install -y -qq unminimize > /dev/null 2>&1 && yes | unminimize > /dev/null 2>&1
@@ -37,10 +37,10 @@ RUN echo ubuntu:ubuntu | chpasswd
 # Configure Userdir creation.
 RUN echo "session optional pam_mkhomedir.so umask=0077" >> /etc/pam.d/common-session
 
-# Conky - program to display stats on desktop
-COPY ./conky/conky.conf /etc/conky/conky.conf
-COPY ./conky/conky.desktop /etc/xdg/autostart/conky.desktop
-COPY ./conky/conky_start.sh /usr/local/share/scripts/conky_start.sh
+# Conky - program to display stats on desktop (disabled: X11-only, crashes Xwayland on GNOME 50)
+# COPY ./conky/conky.conf /etc/conky/conky.conf
+# COPY ./conky/conky.desktop /etc/xdg/autostart/conky.desktop
+# COPY ./conky/conky_start.sh /usr/local/share/scripts/conky_start.sh
 
 # Add automatic Shutdown Trigger after a specified time defined in the restart.service file.
 COPY ./restart/restart.service /etc/systemd/system/restart.service
