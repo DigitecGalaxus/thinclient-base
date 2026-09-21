@@ -1,5 +1,0 @@
-# Apt mirrors with fallback: init7 -> switch.ch (10s timeout)
-deb mirror+file:/etc/apt/mirrors.list questing main restricted universe multiverse
-deb mirror+file:/etc/apt/mirrors.list questing-updates main restricted universe multiverse
-deb mirror+file:/etc/apt/mirrors.list questing-backports main restricted universe multiverse
-deb mirror+file:/etc/apt/mirrors.list questing-security main restricted universe multiverse

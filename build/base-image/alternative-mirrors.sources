@@ -1,0 +1,5 @@
+# Apt mirrors with fallback: init7 -> switch.ch (10s timeout)
+Types: deb
+URIs: mirror+file:/etc/apt/mirrors.list
+Suites: resolute resolute-updates resolute-backports resolute-security
+Components: main restricted universe multiverse
