@@ -1,5 +1,5 @@
 # This Dockerfile does not follow some best-practices, as it's not intended to be used as a Docker image. We simply use Docker as an abstraction for creating the filesystem we need.
-FROM ubuntu:24.04
+FROM ubuntu:26.04
 
 # Set environment variables so apt installs packages non-interactively
 ENV DEBIAN_FRONTEND=noninteractive DEBIAN_PRIORITY=critical
@@ -11,7 +11,7 @@ RUN echo 'Acquire::Retries "3";' > /etc/apt/apt.conf.d/80-retries && \
 # Replace default Ubuntu sources with mirror fallback chain (init7 -> switch.ch, 10s timeout)
 RUN rm -f /etc/apt/sources.list.d/ubuntu.sources
 COPY mirrors.list /etc/apt/mirrors.list
-COPY alternative-mirrors.list /etc/apt/sources.list.d/alternative-mirrors.list
+COPY alternative-mirrors.sources /etc/apt/sources.list.d/alternative-mirrors.sources
 
 # Fully upgrading the image
 RUN apt-get update -qq > /dev/null 2>&1 && apt-get -qq -y full-upgrade > /dev/null 2>&1
@@ -19,34 +19,17 @@ RUN apt-get update -qq > /dev/null 2>&1 && apt-get -qq -y full-upgrade > /dev/nu
 # Install essential packages
 RUN apt-get update -qq > /dev/null 2>&1 && \
     apt-get install -y -qq jq wget curl software-properties-common > /dev/null 2>&1 && \
-    apt-get install -y -qq gnupg2 apt-utils wget sudo vim syslog-ng earlyoom iputils-ping dnsutils traceroute ca-certificates conky-all openssh-server libxss1 zram-config > /dev/null 2>&1
+    apt-get install -y -qq gnupg2 apt-utils wget sudo vim syslog-ng earlyoom iputils-ping dnsutils traceroute ca-certificates openssh-server libxss1 zram-config > /dev/null 2>&1
 
 # Unminimize is needed such that the languages work properly within KDE.
-RUN yes | unminimize > /dev/null 2>&1
+RUN apt-get install -y -qq unminimize > /dev/null 2>&1 && yes | unminimize > /dev/null 2>&1
 
 # Resolving the current stable kernel version via the metapackage "linux-image-generic" and installing it. Can be hardcoded if necessary.
 RUN apt-get install -y -qq $(apt-cache depends linux-image-generic | grep -P 'Depends:\s+linux-image-\d|Depends:\s+linux-modules-extra-' | cut -d ':' -f2 | tr -d "<> ") > /dev/null 2>&1
 
 # Installing additional firmware/drivers for Intel and AMD CPUs, GPUs, WiFi, and Bluetooth.
-# Bluetooth firmware: all Intel ibt-* (covers AX200/AX201/AX210/AX211 and future chipsets, ~14 MB) plus qca (QCA9377).
-RUN bash -c 'apt-get update -qq > /dev/null 2>&1 && \
-    apt-get install -y -qq intel-microcode && \
-    apt-get install -y -qq amd64-microcode && \
-    apt-get download linux-firmware && \
-    dpkg -x *.deb /tmp/linux-firmware/ && \
-    mkdir /lib/firmware/i915/ && \
-    cp /tmp/linux-firmware/usr/lib/firmware/i915/* /lib/firmware/i915/ && \
-    cp -r /tmp/linux-firmware/usr/lib/firmware/iwlwifi-* /lib/firmware/ && \
-    mkdir /lib/firmware/intel/ && \
-    cp /tmp/linux-firmware/usr/lib/firmware/intel/ibt-* /lib/firmware/intel/ && \
-    mkdir /lib/firmware/qca/ && \
-    cp /tmp/linux-firmware/usr/lib/firmware/qca/rampatch_usb_* /lib/firmware/qca/ && \
-    cp /tmp/linux-firmware/usr/lib/firmware/qca/nvm_usb_* /lib/firmware/qca/ && \
-    mkdir /lib/firmware/amdgpu/ && \ 
-    cp /tmp/linux-firmware/usr/lib/firmware/amdgpu/raven* /lib/firmware/amdgpu/ && \
-    cp /tmp/linux-firmware/usr/lib/firmware/amdgpu/polaris* /lib/firmware/amdgpu/ && \
-    cp -r /tmp/linux-firmware/usr/share/doc/linux-firmware /usr/share/doc/ && \
-    rm -rfv /tmp/linux-firmware > /dev/null 2>&1 && rm -fv *.deb' > /dev/null 2>&1
+# linux-firmware was split into subpackages in Ubuntu 26.04; install only what thin clients need.
+RUN apt-get update -qq > /dev/null 2>&1 && apt-get install -y -qq intel-microcode amd64-microcode linux-firmware-intel-graphics linux-firmware-intel-wireless linux-firmware-qualcomm-wireless linux-firmware-amd-graphics > /dev/null 2>&1
 
 # Setup default login
 RUN echo ubuntu:ubuntu | chpasswd
@@ -54,10 +37,10 @@ RUN echo ubuntu:ubuntu | chpasswd
 # Configure Userdir creation.
 RUN echo "session optional pam_mkhomedir.so umask=0077" >> /etc/pam.d/common-session
 
-# Conky - program to display stats on desktop
-COPY ./conky/conky.conf /etc/conky/conky.conf
-COPY ./conky/conky.desktop /etc/xdg/autostart/conky.desktop
-COPY ./conky/conky_start.sh /usr/local/share/scripts/conky_start.sh
+# Conky - program to display stats on desktop (disabled: X11-only, crashes Xwayland on GNOME 50)
+# COPY ./conky/conky.conf /etc/conky/conky.conf
+# COPY ./conky/conky.desktop /etc/xdg/autostart/conky.desktop
+# COPY ./conky/conky_start.sh /usr/local/share/scripts/conky_start.sh
 
 # Add automatic Shutdown Trigger after a specified time defined in the restart.service file.
 COPY ./restart/restart.service /etc/systemd/system/restart.service
