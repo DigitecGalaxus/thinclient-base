@@ -21,7 +21,7 @@ RUN apt-get update -qq > /dev/null 2>&1 && \
     apt-get install -y -qq jq wget curl software-properties-common > /dev/null 2>&1 && \
     apt-get install -y -qq gnupg2 apt-utils wget sudo vim syslog-ng earlyoom iputils-ping dnsutils traceroute ca-certificates openssh-server libxss1 zram-config > /dev/null 2>&1
 
-# Unminimize is needed such that the languages work properly within KDE.
+# Unminimize is needed such that the languages work properly within GNOME.
 RUN apt-get install -y -qq unminimize > /dev/null 2>&1 && yes | unminimize > /dev/null 2>&1
 
 # Resolving the current stable kernel version via the metapackage "linux-image-generic" and installing it. Can be hardcoded if necessary.
