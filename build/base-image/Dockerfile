@@ -29,7 +29,10 @@ RUN apt-get install -y -qq $(apt-cache depends linux-image-generic | grep -P 'De
 
 # Installing additional firmware/drivers for Intel and AMD CPUs, GPUs, WiFi, and Bluetooth.
 # linux-firmware was split into subpackages in Ubuntu 26.04; install only what thin clients need.
-RUN apt-get update -qq > /dev/null 2>&1 && apt-get install -y -qq intel-microcode amd64-microcode linux-firmware-intel-graphics linux-firmware-intel-wireless linux-firmware-qualcomm-wireless linux-firmware-amd-graphics > /dev/null 2>&1
+# Realtek/Broadcom BT firmware is required for thin clients with rtl_bt/brcm bluetooth chips -
+# without it bluetoothd never sees an adapter (bluetooth.service is conditioned on
+# /sys/class/bluetooth existing) and GNOME shows no way to enable bluetooth.
+RUN apt-get update -qq > /dev/null 2>&1 && apt-get install -y -qq intel-microcode amd64-microcode linux-firmware-intel-graphics linux-firmware-intel-wireless linux-firmware-qualcomm-wireless linux-firmware-realtek linux-firmware-broadcom-wireless linux-firmware-amd-graphics > /dev/null 2>&1
 
 # Setup default login
 RUN echo ubuntu:ubuntu | chpasswd
