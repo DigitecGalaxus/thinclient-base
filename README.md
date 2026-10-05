@@ -6,10 +6,6 @@ This repository contains files and scripts to build a customized version of the 
 
 To make the image a bit more suitable for a stateless operation, there are some customisations which should make the experience better.
 
-### Conky
-
-Conky displays informations about the current status of the thin client, including the build version in order to simplify debugging together with the users. It gives a brief overview over the configured networks, system workloads, hostnames and more on the desktop.
-
 ### Hostname
 
 The thin client gets a unique and recognizable hostname from the `hostname-changer.sh` script. The Hostname is set to `tc-{MACAddressCharacters}`.
@@ -22,7 +18,7 @@ The changes in the networks are small and only for aesthetics. When not applying
 
 A trigger is implemented for an automatic restart for the thin client. This should ensure, that a clean boot is done after a while and start freshly with an up-to-date system. The default such that the system reboots after one month during the night.
 
-Note: In the terminal you will see periodically, when the system is going to reboot. If you want to check it while on desktop, Conky displays this information too.
+Note: In the terminal you will see periodically, when the system is going to reboot. If you want to check it while on desktop, the GNOME Shell sysinfo overlay extension displays this information too.
 
 ### Scrolling
 
